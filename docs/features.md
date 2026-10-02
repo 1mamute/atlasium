@@ -4,8 +4,9 @@ Atlasium is in early development. This page lists what it will do and what works
 
 | Feature | Status |
 | --- | --- |
-| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap`) | Available |
+| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap`, `/atlasium fog`) | Available |
 | Minimap button | Available |
+| Fog clearing | Available |
 | Smooth map navigation (drag and zoom) | Planned |
 | Map notes | Planned |
 | TomTom integration | Planned |
@@ -16,6 +17,12 @@ Atlasium is in early development. This page lists what it will do and what works
 
 A round button on the edge of the minimap. Click it to open or close the world map, and drag it
 to any spot around the minimap. See [Usage](usage.md#minimap-button).
+
+## Fog clearing
+
+The world map shows every area of a zone, also the ones you have not explored yet. Unexplored
+areas are a little darker, so you can still see where you have not been. See
+[Usage](usage.md#fog-clearing).
 
 ## Smooth map navigation
 

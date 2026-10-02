@@ -54,6 +54,9 @@ function helper.installWowStubs()
         frames = {},
         toggled = {},
         cursor = { x = 0, y = 0 },
+        hooks = {},
+        -- The current world map: its file name and the texture paths of the explored overlays.
+        map = { name = nil, overlays = {} },
     }
 
     for name in pairs(namedFrames) do
@@ -112,6 +115,29 @@ function helper.installWowStubs()
     _G.ToggleFrame = function(frame) table.insert(state.toggled, frame) end
     -- Blizzard does not define GetMinimapShape in 3.3.5. Specs set it to act as a shape add-on.
     _G.GetMinimapShape = nil
+
+    _G.hooksecurefunc = function(name, fn) state.hooks[name] = fn end
+    _G.wipe = function(t)
+        for key in pairs(t) do
+            t[key] = nil
+        end
+        return t
+    end
+    _G.GetMapInfo = function() return state.map.name end
+    _G.GetNumMapOverlays = function() return #state.map.overlays end
+    _G.GetMapOverlayInfo = function(i) return state.map.overlays[i] end
+    local detailTextures = {}
+    _G.WorldMapDetailFrame = helper.newFake({
+        textures = detailTextures,
+        CreateTexture = function(_, textureName, layer)
+            local texture = helper.newFake({ name = textureName, layer = layer, shown = true })
+            texture.Show = function(self) self.shown = true end
+            texture.Hide = function(self) self.shown = false end
+            texture.IsShown = function(self) return self.shown end
+            table.insert(detailTextures, texture)
+            return texture
+        end,
+    })
 
     return state
 end

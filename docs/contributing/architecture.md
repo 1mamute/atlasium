@@ -10,6 +10,8 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Util.lua         pure helper functions that do not call the WoW API
   Core.lua         event handling, saved-variable setup, the /atlasium command
   MinimapButton.lua  the minimap button and its position math
+  Data/Overlays.lua  the world map overlays of all zones (generated, do not edit)
+  FogClear.lua     fog clearing on the world map, and its tile math
 tests/             busted specs and WoW stubs (not part of the add-on)
 docs/              documentation
 ```
@@ -31,11 +33,28 @@ globals are the saved variable `AtlasiumDB`, the slash command and frame names t
 
 The game loads files in `.toc` order. A file can use only the modules listed above it. `Util.lua`
 is first because `Core.lua` uses it. `MinimapButton.lua` comes after `Core.lua`, because it
-registers `PLAYER_LOGIN` with `Core.RegisterEvent` when it loads.
+registers `PLAYER_LOGIN` with `Core.RegisterEvent` when it loads. `Data/Overlays.lua` comes
+before `FogClear.lua`, because `FogClear.lua` reads `ns.Overlays`.
 
 Code that needs saved settings or other add-ons waits for an event. For example, the minimap
 button is built on `PLAYER_LOGIN`: at that time `AtlasiumDB` is ready, and add-ons that define
 `GetMinimapShape` have loaded.
+
+## Hooks on Blizzard code
+
+To run code after a Blizzard function, use `hooksecurefunc`. Do not replace Blizzard functions or
+API globals: a replaced function changes the result for all add-ons and can taint Blizzard code.
+For example, `FogClear.lua` hooks `WorldMapFrame_Update` when it loads. FrameXML loads before
+add-ons, so the function exists. The map opens only after login, but the hook still checks
+`ns.db`.
+
+## Fog clearing data
+
+`Data/Overlays.lua` comes from the 3.3.5a (build 12340) files `WorldMapOverlay.dbc` and
+`WorldMapArea.dbc`. The client has no API for unexplored overlays, so the add-on ships this table.
+The keys are the map names from `GetMapInfo()`. Overlay names keep the case from the game data, so
+compare them without case (`FogClear.OverlayKey`). The data does not change, so do not edit the
+file by hand. `tests/overlays_spec.lua` checks its shape.
 
 ## Keep code testable
 
