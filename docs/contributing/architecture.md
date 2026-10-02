@@ -9,6 +9,7 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Atlasium.toc     manifest (Interface 30300, saved variable AtlasiumDB)
   Util.lua         pure helper functions that do not call the WoW API
   Core.lua         event handling, saved-variable setup, the /atlasium command
+  MinimapButton.lua  the minimap button and its position math
 tests/             busted specs and WoW stubs (not part of the add-on)
 docs/              documentation
 ```
@@ -23,12 +24,18 @@ local ADDON_NAME, ns = ...
 
 The game passes two values to each file in the `.toc`: the add-on name and one shared table. Each
 module attaches itself to this table (`ns.Util`, `ns.Core`), so you do not need globals. The only
-globals are the saved variable `AtlasiumDB` and the slash command.
+globals are the saved variable `AtlasiumDB`, the slash command and frame names that start with
+`Atlasium` (see [Conventions](conventions.md#structure)).
 
 ## Load order
 
 The game loads files in `.toc` order. A file can use only the modules listed above it. `Util.lua`
-is first because `Core.lua` uses it.
+is first because `Core.lua` uses it. `MinimapButton.lua` comes after `Core.lua`, because it
+registers `PLAYER_LOGIN` with `Core.RegisterEvent` when it loads.
+
+Code that needs saved settings or other add-ons waits for an event. For example, the minimap
+button is built on `PLAYER_LOGIN`: at that time `AtlasiumDB` is ready, and add-ons that define
+`GetMinimapShape` have loaded.
 
 ## Keep code testable
 

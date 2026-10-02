@@ -13,11 +13,29 @@ globals = {
 read_globals = {
     "CreateFrame",
     "DEFAULT_CHAT_FRAME",
+    "GameTooltip",
     "GetAddOnMetadata",
+    "GetCursorPosition",
+    "GetMinimapShape",
+    "Minimap",
+    "ToggleFrame",
+    "UIParent",
+    "WorldMapFrame",
 }
 
 -- Specs install stubs for WoW globals, so they need write access.
 files["tests/"] = {
     std = "+busted",
-    globals = { "CreateFrame", "DEFAULT_CHAT_FRAME", "GetAddOnMetadata" },
+    globals = {
+        "CreateFrame",
+        "DEFAULT_CHAT_FRAME",
+        "GameTooltip",
+        "GetAddOnMetadata",
+        "GetCursorPosition",
+        "GetMinimapShape",
+        "Minimap",
+        "ToggleFrame",
+        "UIParent",
+        "WorldMapFrame",
+    },
 }

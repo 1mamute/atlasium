@@ -7,3 +7,4 @@
 
 Util.lua
 Core.lua
+MinimapButton.lua

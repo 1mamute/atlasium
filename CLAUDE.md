@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**. The repo has a minimal scaffold: the add-on in `Atlasium/` (`Util.lua`, `Core.lua`), busted specs in `tests/`, and developer docs in `docs/`.
+Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**. The repo has a minimal scaffold: the add-on in `Atlasium/` (`Util.lua`, `Core.lua`, `MinimapButton.lua`), busted specs in `tests/`, and developer docs in `docs/`. The minimap button is the first feature.
 
 ## Commands
 
@@ -19,12 +19,13 @@ CI (`.github/workflows/ci.yml`) runs both.
 ## Architecture
 
 - The client calls each `.toc` file with `(addonName, ns)` varargs; `ns` is the only shared state. `Core.lua` owns the event frame (`Core.RegisterEvent`), SavedVariables init (`ns.defaults` merged into `AtlasiumDB` via `ns.Util.CopyDefaults` on `ADDON_LOADED`) and the `/atlasium` slash handler.
-- Specs load files with `helper.loadAddonFile(path, ns)`, which mimics the client's varargs, after `helper.installWowStubs()` mocks the WoW globals. A new WoW API needs a stub in `installWowStubs()` as well as an entry in `read_globals`.
+- `MinimapButton.lua` builds the button on `PLAYER_LOGIN` (registered with `Core.RegisterEvent`, which keeps one handler per event). Its position and tooltip math are pure functions (`GetOffset`, `AngleFromCursor`, `GetTooltipAnchor`).
+- Specs load files with `helper.loadAddonFile(path, ns)`, which mimics the client's varargs, after `helper.installWowStubs()` mocks the WoW globals. The `CreateFrame` stub returns fake frames that record any method call (`helper.lastCall`). A new WoW API needs a stub in `installWowStubs()` as well as entries in `read_globals` and the `tests/` globals.
 - Deeper docs: `docs/contributing/` (`architecture.md`, `conventions.md`, `testing.md`).
 
 ## Code layout rules
 
-- Every file starts with `local ADDON_NAME, ns = ...` and attaches to `ns`; no new globals beyond `AtlasiumDB` and the slash command.
+- Every file starts with `local ADDON_NAME, ns = ...` and attaches to `ns`; no new globals beyond `AtlasiumDB`, the slash command and frame names that start with `Atlasium` (only when the client or other add-ons need the name, for example `UISpecialFrames`).
 - New files go in `Atlasium/Atlasium.toc` in dependency order, with a matching `tests/*_spec.lua`.
 - Keep logic pure (like `Util.lua`) and WoW-API glue thin so it can be tested with the stubs in `tests/helper.lua`.
 - Add any new WoW API function to `read_globals` in `.luacheckrc`.
@@ -46,3 +47,4 @@ CI (`.github/workflows/ci.yml`) runs both.
 
 - Code is Lua/XML running in the 3.3.5a client (Lua 5.1, no modern Blizzard APIs). Verify that any function, event or widget method exists in 3.3.5a before using it.
 - Carbonite, Mapster, Questie-335 and TomTom are the reference implementations the project draws on.
+- Do not copy or check against the `minimapShapes` table in Questie-335's `Compat/Libs/LibDBIcon-1.0` (Rev 15): it swaps several shapes. Use the shape rule in `MinimapButton.lua`.

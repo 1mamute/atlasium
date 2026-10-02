@@ -2,11 +2,11 @@
 
 ## Settings
 
-Atlasium currently has one setting.
-
 | Setting | Default | How to change |
 | --- | --- | --- |
 | Debug messages | Off | Type `/atlasium debug` to switch on or off. |
+| Minimap button | Shown | Type `/atlasium minimap` to hide or show it. |
+| Minimap button position | Bottom-left edge of the minimap | Drag the button around the minimap. |
 
 There is no settings window yet.
 
