@@ -4,12 +4,18 @@ Atlasium is in early development. This page lists what it will do and what works
 
 | Feature | Status |
 | --- | --- |
-| Slash commands (`/atlasium version`, `/atlasium debug`) | Available |
+| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap`) | Available |
+| Minimap button | Available |
 | Smooth map navigation (drag and zoom) | Planned |
 | Map notes | Planned |
 | TomTom integration | Planned |
 | Questie integration | Planned |
 | Party integration | Planned |
+
+## Minimap button
+
+A round button on the edge of the minimap. Click it to open or close the world map, and drag it
+to any spot around the minimap. See [Usage](usage.md#minimap-button).
 
 ## Smooth map navigation
 
