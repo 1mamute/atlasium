@@ -1,0 +1,9 @@
+## Interface: 30300
+## Title: Atlasium
+## Notes: Map add-on with notes, TomTom/Questie integration and party sharing.
+## Author: 1mamute
+## Version: 0.1.0
+## SavedVariables: AtlasiumDB
+
+Util.lua
+Core.lua
