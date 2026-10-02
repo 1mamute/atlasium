@@ -41,3 +41,6 @@ luac.out
 
 # Claude
 .claude
+
+# Local settings (copy .env.example to .env)
+.env
