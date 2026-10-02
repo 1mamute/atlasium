@@ -8,3 +8,5 @@
 Util.lua
 Core.lua
 MinimapButton.lua
+Data\Overlays.lua
+FogClear.lua

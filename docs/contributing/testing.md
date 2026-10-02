@@ -22,6 +22,10 @@ These are the stubs:
 | `GetCursorPosition()` | Returns `state.cursor.x` and `state.cursor.y`. |
 | `ToggleFrame(frame)` | Adds the frame to `state.toggled`. |
 | `GetMinimapShape` | `nil`, as in the 3.3.5 client. Set it in a spec to act as a shape add-on such as SexyMap. |
+| `GetMapInfo()`, `GetNumMapOverlays()`, `GetMapOverlayInfo(i)` | Read `state.map`: `name` is the map name, and `overlays` is a list of the texture paths of the explored overlays. |
+| `WorldMapDetailFrame` | A fake frame. `CreateTexture` returns a fake texture with real `Show`, `Hide` and `IsShown`, and adds it to `WorldMapDetailFrame.textures`. |
+| `hooksecurefunc(name, fn)` | Saves `fn` in `state.hooks[name]`. Call it from a spec to act as the hooked Blizzard function. |
+| `wipe(t)` | Clears a table, as in the client. |
 | `DEFAULT_CHAT_FRAME`, `GetAddOnMetadata`, `SlashCmdList` | Chat messages go to `state.messages`. The version is `0.1.0`. |
 
 The `state` table also has `events` (registered events), `scripts` (scripts set on any frame) and
