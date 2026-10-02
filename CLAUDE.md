@@ -19,7 +19,7 @@ CI (`.github/workflows/ci.yml`) runs both.
 ## Architecture
 
 - The client calls each `.toc` file with `(addonName, ns)` varargs; `ns` is the only shared state. `Core.lua` owns the event frame (`Core.RegisterEvent`), SavedVariables init (`ns.defaults` merged into `AtlasiumDB` via `ns.Util.CopyDefaults` on `ADDON_LOADED`) and the `/atlasium` slash handler.
-- Specs load files with `helper.loadAddonFile(path, ns)`, which mimics the client's varargs, after `helper.installWowStubs()` fakes the WoW globals. A new WoW API needs a stub in `installWowStubs()` as well as an entry in `read_globals`.
+- Specs load files with `helper.loadAddonFile(path, ns)`, which mimics the client's varargs, after `helper.installWowStubs()` mocks the WoW globals. A new WoW API needs a stub in `installWowStubs()` as well as an entry in `read_globals`.
 - Deeper docs: `docs/contributing/` (`architecture.md`, `conventions.md`, `testing.md`).
 
 ## Code layout rules
@@ -28,6 +28,12 @@ CI (`.github/workflows/ci.yml`) runs both.
 - New files go in `Atlasium/Atlasium.toc` in dependency order, with a matching `tests/*_spec.lua`.
 - Keep logic pure (like `Util.lua`) and WoW-API glue thin so it can be tested with the stubs in `tests/helper.lua`.
 - Add any new WoW API function to `read_globals` in `.luacheckrc`.
+
+## Documentation style
+
+- Player-facing docs (`README.md`, `docs/*.md`) use normal, friendly English.
+- Contributor docs (`docs/contributing/`) use about 80% ASD-STE100: short sentences (about 20 words), one idea or instruction per sentence, active voice, simple present tense, consistent terms, numbered steps for procedures. Relax the rules where strict STE would read badly for humans, for example with "so", "for example" or a natural phrasing. Humans are the main readers, so readability wins over strict compliance.
+- Keep real status honest: mark features as Available or Planned, and do not describe planned work as built.
 
 ## Planned features (from README)
 
