@@ -3,8 +3,8 @@
 A map add-on for World of Warcraft 3.3.5a (WotLK) that makes the world map feel like a modern web
 map, and makes exploring with a group easier.
 
-> **Status: early development.** Atlasium loads and answers a few slash commands. Most features
-> below are planned and not built yet. There is no release to download.
+> **Status: early development.** Atlasium loads, shows a minimap button and answers a few slash
+> commands. The features below are planned and not built yet. There is no release to download.
 
 ## Features
 
