@@ -139,9 +139,9 @@ function FogClear.Update()
     HideFrom(count + 1)
 end
 
---- Switch the saved `enabled` setting. If the map is open, draw or hide the overlays at once.
-function FogClear.Toggle()
-    ns.db.fogClear.enabled = not ns.db.fogClear.enabled
+--- Save the `enabled` setting. If the map is open, draw or hide the overlays at once.
+function FogClear.SetEnabled(enabled)
+    ns.db.fogClear.enabled = enabled
     if WorldMapFrame:IsShown() then
         FogClear.Update()
     end

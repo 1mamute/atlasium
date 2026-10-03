@@ -7,7 +7,7 @@
 | Debug messages | Off | Type `/atlasium debug` to switch on or off. |
 | Minimap button | Shown | Type `/atlasium minimap` to hide or show it. |
 | Minimap button position | Bottom-left edge of the minimap | Drag the button around the minimap. |
-| Fog clearing | On | Type `/atlasium fog` to switch it off or on. |
+| Fog clearing | On | Type `/atlasium fog off` or `/atlasium fog on`. |
 | Unexplored area tint | Gray (`r`, `g`, `b` 0.6, `a` 1) | Edit `fogClear.color` in the saved variables file while the game is closed. |
 
 There is no settings window yet.

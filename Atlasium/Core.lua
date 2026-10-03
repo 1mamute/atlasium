@@ -48,20 +48,23 @@ Core.RegisterEvent("ADDON_LOADED", function(name)
 end)
 
 function Core.HandleSlash(msg)
-    local cmd = ns.Util.SplitCommand(msg)
+    local cmd, rest = ns.Util.SplitCommand(msg)
     if cmd == "debug" then
         ns.db.debug = not ns.db.debug
         Print("debug " .. (ns.db.debug and "on" or "off"))
     elseif cmd == "fog" then
-        ns.FogClear.Toggle()
-        Print("fog clearing " .. (ns.db.fogClear.enabled and "on" or "off"))
+        local arg = rest:lower()
+        if arg == "on" or arg == "off" then
+            ns.FogClear.SetEnabled(arg == "on")
+        end
+        Print("fog clearing " .. (ns.db.fogClear.enabled and "on" or "off") .. " (/atlasium fog on | off)")
     elseif cmd == "minimap" then
         ns.MinimapButton.Toggle()
         Print("minimap button " .. (ns.db.minimap.hide and "hidden" or "shown"))
     elseif cmd == "version" then
         Print("v" .. (GetAddOnMetadata(ADDON_NAME, "Version") or "?"))
     else
-        Print("commands: /atlasium debug | fog | minimap | version")
+        Print("commands: /atlasium debug | fog on | fog off | minimap | version")
     end
 end
 
