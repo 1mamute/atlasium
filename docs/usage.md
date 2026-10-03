@@ -10,7 +10,8 @@ available commands.
 | `/atlasium version` | Shows the installed version. |
 | `/atlasium debug` | Turns debug messages on or off. Type it again to switch back. |
 | `/atlasium minimap` | Hides the minimap button. Type it again to show the button. |
-| `/atlasium fog` | Turns fog clearing off. Type it again to turn it back on. |
+| `/atlasium fog on` | Turns fog clearing on. |
+| `/atlasium fog off` | Turns fog clearing off, so the map shows the normal fog again. |
 
 ## Minimap button
 
@@ -32,8 +33,8 @@ map shows the whole zone. Areas you have explored look the same as before, and a
 explored yet are slightly darker.
 
 - Fog clearing works on zone maps. Continent, city and dungeon maps do not change.
-- Type `/atlasium fog` to bring the fog back. Type it again to clear it. If the map is open, it
-  changes at once.
+- Type `/atlasium fog off` to bring the fog back, and `/atlasium fog on` to clear it again. If
+  the map is open, it changes at once. `/atlasium fog` on its own shows whether it is on or off.
 - Atlasium remembers your choice after a reload or logout.
 
 Use one map add-on at a time. If Mapster's fog clearing is also on, Atlasium darkens every area.
