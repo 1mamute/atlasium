@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**. The repo has a minimal scaffold: the add-on in `Atlasium/` (`Util.lua`, `Core.lua`, `MinimapButton.lua`), busted specs in `tests/`, and developer docs in `docs/`. The minimap button is the first feature.
+Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**. The repo has a minimal scaffold: the add-on in `Atlasium/` (`Util.lua`, `Core.lua`, `MinimapButton.lua`, `Data/Overlays.lua`, `FogClear.lua`), busted specs in `tests/`, and developer docs in `docs/`. Available features: the minimap button and fog clearing on the world map.
 
 ## Commands
 
@@ -19,6 +19,7 @@ CI (`.github/workflows/ci.yml`) runs both.
 ## Architecture
 
 - The client calls each `.toc` file with `(addonName, ns)` varargs; `ns` is the only shared state. `Core.lua` owns the event frame (`Core.RegisterEvent`), SavedVariables init (`ns.defaults` merged into `AtlasiumDB` via `ns.Util.CopyDefaults` on `ADDON_LOADED`) and the `/atlasium` slash handler.
+- `FogClear.lua` hooks `WorldMapFrame_Update` with `hooksecurefunc` and draws the unexplored overlays on its own `BORDER` textures under `WorldMapDetailFrame`. Its data is `Data/Overlays.lua` (`ns.Overlays`), generated from the 3.3.5a DBC files: do not edit it by hand. The tile math (`GetTiles`) matches Blizzard's loop in `FrameXML/WorldMapFrame.lua`.
 - `MinimapButton.lua` builds the button on `PLAYER_LOGIN` (registered with `Core.RegisterEvent`, which keeps one handler per event). Its position and tooltip math are pure functions (`GetOffset`, `AngleFromCursor`, `GetTooltipAnchor`).
 - Specs load files with `helper.loadAddonFile(path, ns)`, which mimics the client's varargs, after `helper.installWowStubs()` mocks the WoW globals. The `CreateFrame` stub returns fake frames that record any method call (`helper.lastCall`). A new WoW API needs a stub in `installWowStubs()` as well as entries in `read_globals` and the `tests/` globals.
 - Deeper docs: `docs/contributing/` (`architecture.md`, `conventions.md`, `testing.md`).
