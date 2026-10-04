@@ -5,7 +5,6 @@
 ## Requirements
 
 - World of Warcraft **3.3.5a** (WotLK, interface 30300). Other versions are not supported.
-- Optional: TomTom and Questie, for the planned integrations.
 
 ## Install
 
