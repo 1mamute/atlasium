@@ -19,6 +19,15 @@ These are the rules for Atlasium code. Where luacheck can enforce a rule, it doe
 - **Optional add-ons** (TomTom, Questie): check that the add-on's global or API exists before you
   call it. Keep each integration in its own file, so the core works without it.
 
+## UI design
+
+Make the UI as close to a vanilla window as possible, so the add-on feels like a built-in feature
+of the original client.
+
+Use the original WoW 3.3.5a client as the visual reference. Use Blizzard templates, textures, fonts,
+controls and window behavior. Keep English and Brazilian Portuguese labels readable at small UI
+scales. Atlasium text uses the selected add-on language. Blizzard windows use the client language.
+
 ## Game behavior
 
 - **Saved variables:** merge the defaults on `ADDON_LOADED` with `Util.CopyDefaults`. Never

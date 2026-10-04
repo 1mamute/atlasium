@@ -8,6 +8,7 @@ This page shows how the Atlasium code is organized.
 Atlasium/          the add-on; put this folder in Interface/AddOns
   Atlasium.toc     manifest (Interface 30300, saved variable AtlasiumDB)
   Util.lua         pure helper functions that do not call the WoW API
+  Localization.lua  English and Brazilian Portuguese strings and live language selection
   Core.lua         event handling, saved-variable setup, the /atlasium command
   Log.lua          error and debug messages, in chat and in the saved log
   MinimapButton.lua  the minimap button and its position math
@@ -19,6 +20,8 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   MapNavigation.lua  zoom and drag on the world map
   Dev.lua          debug-mode aids for in-game checks: the map marker, fixed keys, AtlasiumDev
   DevConsole.lua   debug-mode dev console: runs Lua from tools/wow-dev.ps1, shows the result
+  Settings.lua     shared validation and feature setters for configuration edits
+  SettingsUI.lua   shared controls in the native window and Interface Options panel
 tests/             busted specs and WoW stubs (not part of the add-on)
 tools/             developer scripts, for example the generator of Data/MinimapTileData.lua
 docs/              documentation
@@ -51,6 +54,23 @@ Code that needs saved settings or other add-ons waits for an event. For example,
 button is built on `PLAYER_LOGIN`: at that time `AtlasiumDB` is ready, and add-ons that define
 `GetMinimapShape` have loaded.
 
+## Settings and localization
+
+`Localization.lua` loads before `Core.lua`. It resolves text at use time from `ns.db.language`.
+English is the default and fallback. Keep command keywords and developer logs in English.
+
+`Settings.lua` loads after the feature modules. Its `Get`, `Set` and `ResetDefaults` functions
+share configuration behavior between slash commands and UI controls. Invalid edits leave state
+unchanged. New numeric limits apply to edits; loading existing preferences does not rewrite them.
+
+`SettingsUI.lua` registers one Interface Options panel on `PLAYER_LOGIN`. It creates the standalone
+dialog on first use. Both views use the same content builder. Refresh suppresses control callbacks,
+so showing a view cannot apply changes. The views apply edits immediately and keep them on close.
+Defaults use feature setters and preserve the saved log.
+
+The minimap button resolves `ns.SettingsUI` when clicked, after all manifest files load. Its drag
+handler refreshes the position sliders. Language edits refresh both views and visible tooltips.
+
 ## Hooks on Blizzard code
 
 To run code after a Blizzard function, use `hooksecurefunc`. Do not replace Blizzard functions or
@@ -71,7 +91,7 @@ file by hand. `tests/overlays_spec.lua` checks its shape.
 
 `MinimapTiles.lua` draws raw terrain under the Blizzard minimap at every zoom level.
 A transparent mask hides the Blizzard ground. The client still draws the player arrow and blips.
-Far levels extend zoom 0 on the same layer. Outdoor rendering is checked in the client.
+Outdoor rendering is checked in the client.
 
 ### Data
 
@@ -98,7 +118,7 @@ The top half of the file is pure functions:
 2. `WorldToTile` turns world yards into tile units. A tile is 533.33 yards. The column grows east
    and the row grows south.
 3. `GetDiameter` uses the outdoor diameter for Blizzard zoom 0 through 5: 466.67, 400, 333.33,
-   266.67, 200 and 133.33 yards. At zoom 0, each far level multiplies it by `farStep`.
+   266.67, 200 and 133.33 yards.
 4. `BuildSegments` covers the minimap shape with horizontal strips, 2 units high, that overlap by
    0.35 units. It splits each strip where it crosses a tile edge. Each piece shows its part of one
    tile through the 8 argument `SetTexCoord`, so the same code draws a rotated map.
@@ -116,11 +136,9 @@ The bottom half is the glue:
   and its underlay to `LOW`. Fallback and tiles off restore the original strata.
   A secure hook preserves later strata choices from other add-ons.
 - `SetMaskTexture` uses `Interface\WORLDMAP\Silithus\pixelfix1` to hide the Blizzard ground.
-  `SetBlipTexture` uses that transparent texture at far levels, where engine blip positions
-  still use the zoom 0 scale. At normal levels the blips return.
-- Secure hooks remember mask and blip paths set by other add-ons. While a swap is active,
-  Atlasium reapplies transparency. When it stops drawing, it restores the remembered paths.
-  Defaults are `Textures\MinimapMask` and `Interface\Minimap\ObjectIcons`.
+- A secure hook remembers mask paths set by other add-ons. While the mask is transparent,
+  Atlasium reapplies transparency. When it stops drawing, it restores the remembered path.
+  The default is `Textures\MinimapMask`. Engine blip textures stay untouched.
   A mask set before the hooks load is a known compatibility limit.
 - `PLAYER_ENTERING_WORLD` reapplies active transparent textures after world loading.
   The engine can reset them without calling the Lua setters, so a state-change check alone
@@ -132,25 +150,20 @@ The bottom half is the glue:
   no position, the layer calls `SetMapToCurrentZone()`, at most once a second. While the world map
   is open, the layer keeps the last position.
 - The textures come from a pool. A texture calls `SetTexture` only when its tile changes.
-- In an instance, indoors, in a WMO city, or without a position, the layer hides and leaves far zoom.
+- In an instance, indoors, in a WMO city, or without a position, the layer hides.
   WMO city map names are `Ogrimmar`, `ThunderBluff`, `Darnassis`, `TheExodar` and `Ironforge`.
   `IsIndoorZoom` compares the indoor and outdoor zoom CVars with the current zoom.
 - Debug alignment shows the tiles above the minimap at half alpha and keeps the Blizzard mask.
   `/atlasium minimap align on|off` controls it at the current Blizzard zoom.
 
-`MinimapZoom.lua` sends the wheel to far zoom: wheel down at zoom 0 goes to the next far level
-(`CanZoomOut`), and wheel up above level 0 goes back one level. On `PLAYER_LOGIN`, far zoom wraps
-the `OnClick` script of `MinimapZoomIn`, so the + button also goes back one level.
-`MINIMAP_UPDATE_ZOOM` redraws immediately; a zoom other than 0 also leaves far zoom.
+`MinimapZoom.lua` sends each wheel notch through Blizzard's zoom buttons, which enforce the
+six native zoom levels. The tile renderer keeps the native button handlers unchanged.
+`MINIMAP_UPDATE_ZOOM` redraws immediately.
 Zone changes check fallback immediately after updating the current map.
-The wheel checks current fallback state before starting a far level.
 
-Settings live in `minimapTiles`: `enabled`, `farMax` and `farStep`.
-`/atlasium minimap tiles off` restores Blizzard textures. Wheel zoom has its own setting;
-turning it off leaves far zoom but keeps custom terrain enabled.
-
-Known limits: pins of other add-ons keep their zoom 0 positions, and the engine blips (party,
-tracking, herbs) do not show past zoom 0.
+Settings live in `minimapTiles`: `enabled`.
+`/atlasium minimap tiles off` restores the Blizzard mask. Wheel zoom has its own setting;
+turning it off keeps custom terrain enabled.
 
 ## Map navigation
 

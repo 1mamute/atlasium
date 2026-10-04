@@ -18,6 +18,16 @@ function helper.loadAddonFile(path, ns)
     return ns
 end
 
+--- Load the complete add-on in its real manifest order, without firing login events.
+function helper.loadAddon()
+    local ns = helper.newNamespace()
+    for line in io.lines("Atlasium/Atlasium.toc") do
+        local path = line:match("^([^#]+%.lua)%s*$")
+        if path then helper.loadAddonFile("Atlasium/" .. path:gsub("\\", "/"), ns) end
+    end
+    return ns
+end
+
 --- Create a fake widget. Any PascalCase method not defined in `fake` is accepted and recorded in
 -- `fake.calls[method]` as a list of argument lists, so specs can check calls such as SetPoint.
 -- `methods` is an optional table of real methods. Like the client's widget metatable, it is
@@ -195,6 +205,22 @@ define("SetHorizontalScroll", function(self, offset) self.horizontalScroll = off
 define("GetHorizontalScroll", function(self) return self.horizontalScroll or 0 end)
 define("SetVerticalScroll", function(self, offset) self.verticalScroll = offset end)
 define("GetVerticalScroll", function(self) return self.verticalScroll or 0 end)
+define("GetVerticalScrollRange", function(self)
+    return math.max(0, (self.scrollChild and self.scrollChild:GetHeight() or 0) - self:GetHeight())
+end)
+define("SetText", function(self, value) self.text = value end)
+define("GetText", function(self) return self.text end)
+define("SetChecked", function(self, value) self.checked = value and true or false end)
+define("GetChecked", function(self) return self.checked end)
+define("SetMinMaxValues", function(self, low, high) self.low, self.high = low, high end)
+define("GetMinMaxValues", function(self) return self.low, self.high end)
+define("SetValue", function(self, value)
+    value = math.max(self.low or -math.huge, math.min(self.high or math.huge, value))
+    if value == self.value then return end
+    self.value = value
+    helper.runScript(self, "OnValueChanged", value)
+end)
+define("GetValue", function(self) return self.value or 0 end)
 
 --- Create a fake frame with the real methods above. `fields` may set the state: `name`, `parent`,
 -- `shown` (default true), `scale`, `effectiveScale`, `width`, `height`, `left`, `top`,
@@ -417,7 +443,6 @@ function helper.installWowStubs()
         cvars = { rotateMinimap = "0", minimapZoom = "0", minimapInsideZoom = "0" }, -- GetCVar(name)
         zone = nil, -- what SetMapToCurrentZone shows: { name, level, x, y }
         mapResets = 0, -- SetMapToCurrentZone calls
-        sounds = {}, -- PlaySound names
         time = 0, -- GetTime(), in seconds
         focus = nil, -- GetCurrentKeyBoardFocus(): the edit box that has the keyboard
         errors = {}, -- messages that reached the default error handler
@@ -434,14 +459,26 @@ function helper.installWowStubs()
     _G.DEFAULT_CHAT_FRAME = {
         AddMessage = function(_, msg) table.insert(state.messages, msg) end,
     }
-    _G.CreateFrame = function(frameType, name, parent)
+    _G.CreateFrame = function(frameType, name, parent, template)
         local frame = createNamed(name, { frameType = frameType, parent = parent, textures = {},
-            scriptSink = state.scripts })
+            template = template, scriptSink = state.scripts })
         frame.RegisterEvent = function(_, event) state.events[event] = true end
         frame.CreateTexture = function(self, textureName, layer)
             local texture = helper.newFake({ name = textureName, layer = layer })
             table.insert(self.textures, texture)
             return texture
+        end
+        frame.CreateFontString = function(_, fontName)
+            return createNamed(fontName)
+        end
+        if template == "UICheckButtonTemplate" or template == "OptionsSliderTemplate" then
+            createNamed(name .. "Text")
+            if template == "OptionsSliderTemplate" then
+                createNamed(name .. "Low")
+                createNamed(name .. "High")
+            end
+        elseif template == "UIPanelDialogTemplate" then
+            frame.title = createNamed(nil)
         end
         if frameType == "EditBox" then
             -- Text and keyboard focus. The client runs OnEditFocusLost when an edit box loses the focus.
@@ -488,7 +525,6 @@ function helper.installWowStubs()
     _G.IsIndoors = function() return state.indoors end
     _G.IsInInstance = function() return state.instance end
     _G.GetCVar = function(name) return state.cvars[name] end
-    _G.PlaySound = function(name) table.insert(state.sounds, name) end
     -- Blizzard's Minimap_ZoomIn and Minimap_ZoomOut click the + and - buttons. The stubs add
     -- 1 or -1 to `state.minimapZooms`.
     _G.Minimap_ZoomIn = function() table.insert(state.minimapZooms, 1) end
@@ -498,7 +534,46 @@ function helper.installWowStubs()
         GetHeight = function() return 768 end,
         GetEffectiveScale = function() return state.uiScale end,
     })
-    _G.GameTooltip = helper.newFake()
+    _G.GameTooltip = helper.newFrame()
+    _G.GameTooltip.SetOwner = function(self, owner, point)
+        self.owner = owner
+        self.calls.SetOwner = self.calls.SetOwner or {}
+        table.insert(self.calls.SetOwner, { n = 2, owner, point })
+    end
+    _G.GameTooltip.GetOwner = function(self) return self.owner end
+    _G.GameTooltip.ClearLines = function(self) self.calls.AddLine = nil end
+    _G.UISpecialFrames = {}
+    state.sounds = {}
+    _G.PlaySound = function(sound) table.insert(state.sounds, sound) end
+    state.categories = {}
+    _G.InterfaceOptions_AddCategory = function(panel)
+        table.insert(state.categories, panel)
+        panel.okay = panel.okay or function() end
+        panel.cancel = panel.cancel or function() end
+    end
+    _G.UIDropDownMenu_SetWidth = function(frame, width) frame.dropdownWidth = width end
+    _G.UIDropDownMenu_Initialize = function(frame, fn) frame.initialize = fn end
+    _G.UIDropDownMenu_CreateInfo = function() return {} end
+    state.dropdownButtons = {}
+    _G.UIDropDownMenu_AddButton = function(info) table.insert(state.dropdownButtons, info) end
+    _G.UIDropDownMenu_SetSelectedValue = function(frame, value) frame.selectedValue = value end
+    _G.UIDropDownMenu_SetText = function(frame, value) frame.dropdownText = value end
+    _G.ColorPickerFrame = createNamed("ColorPickerFrame", { shown = false })
+    _G.ColorPickerFrame.SetColorRGB = function(self, r, g, b)
+        self.r, self.g, self.b = r, g, b
+        if self.func then self.func() end
+    end
+    _G.ColorPickerFrame.GetColorRGB = function(self) return self.r, self.g, self.b end
+    _G.OpacitySliderFrame = createNamed("OpacitySliderFrame")
+    _G.ShowUIPanel = function(frame)
+        frame:Show()
+        if frame == ColorPickerFrame then OpacitySliderFrame:SetValue(frame.opacity) end
+        helper.runScript(frame, "OnShow")
+    end
+    _G.HideUIPanel = function(frame)
+        frame:Hide()
+        helper.runScript(frame, "OnHide")
+    end
     _G.GetCursorPosition = function() return state.cursor.x, state.cursor.y end
     _G.ToggleFrame = function(frame) table.insert(state.toggled, frame) end
     _G.SetOverrideBinding = function(owner, _, key, command)

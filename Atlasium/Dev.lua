@@ -165,6 +165,12 @@ function Dev.OnMapKeyDown(_, key)
     end
 end
 
+--- Save debug mode and synchronize its developer aids.
+function Dev.SetEnabled(enabled)
+    ns.db.debug = enabled
+    Dev.Update()
+end
+
 function Dev.OnCombatEnd()
     if bindingsPending then
         SyncBindings(Dev.IsActive())

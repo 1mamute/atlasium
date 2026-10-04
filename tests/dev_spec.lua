@@ -28,6 +28,8 @@ describe("Dev", function()
         ns = helper.newNamespace()
         helper.loadAddonFile("Atlasium/Util.lua", ns)
         helper.loadAddonFile("Atlasium/Core.lua", ns)
+        helper.loadAddonFile("Atlasium/Localization.lua", ns)
+        helper.loadAddonFile("Atlasium/Settings.lua", ns)
         helper.loadAddonFile("Atlasium/Dev.lua", ns)
     end)
 
@@ -75,7 +77,7 @@ describe("Dev", function()
             assert.same({
                 debug = true,
                 loadId = 1234,
-                modules = "Core Dev DevConsole Log Util",
+                modules = "Core Dev DevConsole Localization Log Settings Util",
                 errorCapture = "BugGrabber",
                 errors = 2,
                 lastError = "Dev.lua:1: boom",
@@ -89,7 +91,7 @@ describe("Dev", function()
             assert.is_nil(health.loadId)
             assert.equals("off", health.errorCapture)
             assert.equals(0, health.errors)
-            assert.equals("Core Dev Util", health.modules)
+            assert.equals("Core Dev Localization Settings Util", health.modules)
         end)
     end)
 

@@ -2,21 +2,22 @@
 
 ## Slash commands
 
-Type these in the chat box. `/atlasium` with no command, or with an unknown one, lists the
-available commands.
+Type these in the chat box. `/atlasium` opens settings. `/atlasium help`, or an unknown command,
+lists the available commands. Command keywords stay the same in both languages.
 
 | Command | What it does |
 | --- | --- |
+| `/atlasium` or `/atlasium settings` | Opens the settings window, even when the minimap button is hidden. |
+| `/atlasium help` | Lists the available commands. |
 | `/atlasium version` | Shows the installed version. |
 | `/atlasium debug` | Turns debug mode on or off. Type it again to switch back. In debug mode a small green or red square shows in the top-left corner of the screen (green: world map open), and the Num Pad `*` and `-` keys open the map and take a screenshot. These are developer aids. |
 | `/atlasium minimap` | Shows the minimap settings and whether each one is on or off. |
 | `/atlasium minimap button on` | Shows the minimap button. |
 | `/atlasium minimap button off` | Hides the minimap button. |
 | `/atlasium minimap zoom on` | Turns minimap wheel zoom on. |
-| `/atlasium minimap zoom off` | Turns minimap wheel zoom off and leaves far zoom. Custom tiles stay enabled. |
-| `/atlasium minimap tiles on` | Enables custom minimap terrain and extra wheel zoom levels (experimental). |
-| `/atlasium minimap tiles off` | Restores the Blizzard terrain and dots, and leaves far zoom. |
-| `/atlasium minimap farmax <number>` | Sets how far the far zoom goes, from 1.5 to 16 times the game's farthest zoom. The default is 4. |
+| `/atlasium minimap zoom off` | Turns minimap wheel zoom off. Custom tiles stay enabled. |
+| `/atlasium minimap tiles on` | Enables custom minimap terrain (experimental). |
+| `/atlasium minimap tiles off` | Restores the Blizzard terrain. |
 | `/atlasium minimap align on` or `off` | Compares custom tiles with Blizzard terrain at half alpha. Requires debug mode. |
 | `/atlasium worldmap` | Shows the world map settings and whether each one is on or off. |
 | `/atlasium worldmap zoom on` | Turns map zoom and drag on. |
@@ -28,10 +29,9 @@ Leave out `on` or `off` to see whether a setting is on, for example `/atlasium w
 
 ## Minimap button
 
-Atlasium puts a round button with a question mark on the edge of your minimap. The question mark
-is a placeholder until Atlasium gets its own icon.
+Atlasium puts a round button with a parchment-map icon on the edge of your minimap.
 
-- **Left-click** opens or closes the world map, like the M key.
+- **Left-click** opens or closes Atlasium settings. The M key still opens the world map.
 - **Drag** the button with the left mouse button to move it around the edge of the minimap. It
   remembers its spot after a reload or logout.
 - **Point at it** to see a tooltip with the version and these actions.
@@ -45,34 +45,25 @@ edge.
 
 - **Mouse wheel up** over the minimap zooms in one step, **wheel down** zooms out one step. It
   works just like the + and - buttons next to the minimap, and the buttons stay in sync.
-- At the closest zoom, more turns of the wheel do nothing. Custom tiles add steps beyond the
-  game's farthest zoom when enabled outdoors.
+- At the closest and farthest zoom, more turns of the wheel do nothing.
 - A plain click on the minimap still pings it, as normal.
 - The game keeps one zoom for indoors and one for outdoors, as it always does.
 - If another add-on already uses the mouse wheel on the minimap, Atlasium leaves it alone.
 - Type `/atlasium minimap zoom off` to turn it off, and `/atlasium minimap zoom on` to turn it
   back on.
 
-## Minimap tiles and far zoom
+## Minimap tiles
 
-This feature is experimental. Outdoor rendering and extra zoom levels are checked in the client.
+This feature is experimental. Outdoor rendering is checked in the client.
 Indoor, city and instance fallback still need field checks.
 
-- At the game's farthest zoom, **wheel down** keeps zooming the minimap out. Each notch shows
-  1.4 times more, up to 4 times the game's farthest zoom (4 steps). Wheel up, or the + button,
-  zooms back in one step at a time, until the game's zoom levels take over again.
-- Atlasium draws raw terrain without lighting at all six game zoom levels and at the extra
-  levels. The client draws your arrow. At the game's zoom levels, its dots stay visible too.
+- Atlasium draws raw terrain without lighting at all six game zoom levels. The client draws
+  your arrow and dots over the terrain.
 - The tiles follow the minimap shape and the rotating minimap option.
 - Indoors, instances, Orgrimmar, Thunder Bluff, Darnassus, the Exodar and Ironforge use the
-  Blizzard minimap. Entering one leaves far zoom.
-- While zoomed out this far, the game's own dots (party members, herbs, ore, tracked
-  creatures) do not show. Icons from other add-ons, such as Questie and TomTom, stay where
-  they would be at the game's farthest zoom, so they do not match the far map.
-- Type `/atlasium minimap farmax 8` to set a limit of 8 times. Each step multiplies the diameter
-  by 1.4, so the last step stays below that limit.
+  Blizzard minimap.
 - `/atlasium minimap tiles off` restores the Blizzard minimap. `/atlasium minimap zoom off`
-  leaves far zoom and disables the wheel, while custom tiles stay enabled.
+  disables the wheel, while custom tiles stay enabled.
 - Known compatibility limit: a square mask set before Atlasium loads its texture hooks cannot
   yet be restored automatically.
 

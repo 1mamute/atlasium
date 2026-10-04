@@ -66,6 +66,36 @@ The chat box takes at most 255 characters, so `wow-dev.ps1 run` is good only for
 result comes back on a screenshot. `wow-dev.ps1 eval` has no length limit and prints the result as
 text. Use `eval` when debug mode is on.
 
+## Settings UI checks
+
+The settings feature adds manifest entries. Restart the client before this first check.
+
+Checked in the 3.3.5a client on 2026-10-04: both settings views, English and Brazilian Portuguese
+text, scroll bounds, feature callbacks, view synchronization, color preview and cancellation,
+defaults, Interface Options cancellation, zoom limits during animation, wheel increments and
+preferences after reload. The native special-window close path also passes. The session reports
+zero captured Lua errors. Original preferences are restored after the checks.
+
+Physical title-bar dragging, the Escape key, different UI scales and changes during real combat
+still need field checks. The callback checks do not replace these checks.
+
+1. Click the minimap button. Confirm that Atlasium settings opens and the world map stays closed.
+2. Drag the title bar. Confirm that the window stays on screen. Close it with Escape.
+3. Open Interface → AddOns → Atlasium. Confirm that both views show the same controls.
+4. Switch to Português (Brasil). Check accents, text wrapping, tooltips and scrolling at small UI scales.
+5. Toggle each feature. Confirm that changes apply immediately. Hide the minimap button, then open
+   settings with `/atlasium`. Confirm that cancelling Interface Options keeps applied changes.
+6. Drag the minimap button. Confirm that both position sliders update.
+7. Zoom the world map. Lower its maximum zoom during animation. Confirm that zoom and scroll stay
+   within the new limits. Change the wheel multiplier and check the next notch.
+8. Change unexplored-area color and opacity with the map open. Cancel the picker and check the
+   previous tint. Repeat and accept the new tint.
+9. Open settings in combat. Change map settings and debug mode. Check for blocked actions and Lua
+   errors. Confirm that debug bindings update after combat.
+10. Reload after setting Portuguese and changing a feature. Confirm that both preferences persist.
+11. Restore defaults from each view. Confirm that English and feature defaults return. Keep the
+    saved log. Mark these checks complete only after observing them in the client.
+
 ## What needs a restart
 
 The client reads `.toc` files only at startup. `/reload` reads the Lua and XML files again.
@@ -266,7 +296,7 @@ Debug mode adds `/atlasium minimap align on` and `off`. It draws the tiles at th
 zoom, at half alpha, over the Blizzard ground. The Blizzard mask stays in place during this check.
 If the scale and position are correct, the two maps match. The layer lets the mouse through.
 Use the check outdoors. Indoor areas, instances and WMO cities use the Blizzard minimap.
-A far zoom step or `/atlasium minimap align off` ends the check.
+`/atlasium minimap align off` ends the check.
 
 Use the Blizzard + and - buttons to choose zoom levels during alignment checks.
 The current zoom and indoor/outdoor CVars must agree for the fallback check.
@@ -275,22 +305,20 @@ Run these checks when changing the renderer:
 
 1. Compare alignment at Blizzard zoom levels 0 through 5.
 2. Track Flight Masters and check an engine dot over the custom terrain.
-3. Enter a far level. Check that engine dots disappear and the player arrow stays visible.
-4. Enter a cave, Orgrimmar and an instance. Check that the Blizzard minimap returns.
-5. Test a square minimap and the rotating minimap option.
-6. Check frame rate while running and turning.
-7. Check Dalaran floors, open sea and zone changes.
-8. Open the world map, then reload the interface. Check the terrain and texture restoration.
-9. Turn tiles off. Check that another add-on's mask and blip textures return.
+3. Enter a cave, Orgrimmar and an instance. Check that the Blizzard minimap returns.
+4. Test a square minimap and the rotating minimap option.
+5. Check frame rate while running and turning.
+6. Check Dalaran floors, open sea and zone changes.
+7. Open the world map, then reload the interface. Check the terrain and texture restoration.
+8. Turn tiles off. Check that another add-on's mask returns and its blip texture stays unchanged.
 
 Checks on 2026-10-04 at Razormane Grounds:
 
 - Automated checks: 319 specs pass; luacheck reports no warnings or errors.
 - Alignment overlays at zoom 0 through 5 look consistent.
-- Far levels 1 and 4 render after a normal reload. The engine player arrow stays visible.
 - Tiles off restores Blizzard terrain and the original `BACKGROUND` strata.
 - Opening and closing the world map leaves the custom minimap working.
-- Rotation and a simulated square shape render at normal and far zoom.
+- Rotation and a simulated square shape render at normal zoom.
   This checks the renderer, not integration with a square minimap add-on.
 
 The failure had two causes. The world render covered the underlay in `BACKGROUND` strata.
@@ -300,7 +328,6 @@ background minimap to `LOW` while drawing and reapplies active swaps on `PLAYER_
 Remaining field checks: an engine-only tracking blip, cave/city/instance fallback, performance
 while running and turning, Dalaran floors, open sea, zone transitions and a real square minimap add-on.
 Flight Master tracking produced no visible blip at this location, so that check is incomplete.
-The original plan and TODO remain open until those checks pass.
 
 The final BugGrabber session has two errors from diagnostic commands: an unavailable
 `GetNumErrors` method and an incorrect slash-handler name. Neither error comes from Atlasium.

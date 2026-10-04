@@ -631,6 +631,23 @@ function MapNavigation.SetEnabled(enabled)
     end
 end
 
+--- Save the maximum zoom and clamp both the rendered zoom and an animation in progress.
+function MapNavigation.SetMaxZoom(maxZoom)
+    ns.db.mapNav.maxZoom = maxZoom
+    if not state.built then return end
+    state.targetZoom = math.min(state.targetZoom, maxZoom)
+    if state.zoom > maxZoom then
+        state.scrollX = MapNavigation.ZoomScroll(state.anchorX, state.scrollX, state.zoom, maxZoom)
+        state.scrollY = MapNavigation.ZoomScroll(state.anchorY, state.scrollY, state.zoom, maxZoom)
+        MapNavigation.ApplyZoom(maxZoom)
+    end
+end
+
+--- Save the world map wheel multiplier for the next notch.
+function MapNavigation.SetStep(step)
+    ns.db.mapNav.step = step
+end
+
 --- Return the current zoom level (1 is no zoom).
 function MapNavigation.GetZoom()
     return state.zoom

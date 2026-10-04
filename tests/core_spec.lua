@@ -7,6 +7,7 @@ describe("Core", function()
         state = helper.installWowStubs()
         ns = helper.newNamespace()
         helper.loadAddonFile("Atlasium/Util.lua", ns)
+        helper.loadAddonFile("Atlasium/Localization.lua", ns)
         helper.loadAddonFile("Atlasium/Core.lua", ns)
         helper.loadAddonFile("Atlasium/Log.lua", ns)
         helper.loadAddonFile("Atlasium/Data/MinimapTileData.lua", ns)
@@ -14,6 +15,8 @@ describe("Core", function()
         helper.loadAddonFile("Atlasium/MinimapZoom.lua", ns)
         helper.loadAddonFile("Atlasium/MapNavigation.lua", ns)
         helper.loadAddonFile("Atlasium/Dev.lua", ns)
+        helper.loadAddonFile("Atlasium/Settings.lua", ns)
+        helper.loadAddonFile("Atlasium/SettingsUI.lua", ns)
     end)
 
     it("registers ADDON_LOADED and wires the event script", function()
@@ -119,7 +122,7 @@ describe("Core", function()
             ns.db.minimap.hide = true
             SlashCmdList.ATLASIUM("minimap")
             assert.matches("worldmap: zoom on, fog off$", state.messages[1])
-            assert.matches("minimap: button off, zoom on, tiles on, farmax 4$", state.messages[2])
+            assert.matches("minimap: button off, zoom on, tiles on$", state.messages[2])
         end)
 
         it("turns the minimap tiles off and on", function()
@@ -128,19 +131,6 @@ describe("Core", function()
             assert.matches("minimap tiles off %(/atlasium minimap tiles on | off%)", state.messages[1])
             SlashCmdList.ATLASIUM("minimap tiles on")
             assert.is_true(ns.db.minimapTiles.enabled)
-        end)
-
-        it("sets the largest far zoom factor within its range", function()
-            SlashCmdList.ATLASIUM("minimap farmax 2.5")
-            assert.equals(2.5, ns.db.minimapTiles.farMax)
-            assert.matches("minimap farmax 2.5 %(/atlasium minimap farmax <1.5%-16>%)", state.messages[1])
-            for _, value in ipairs({ "1", "17", "far", "" }) do
-                SlashCmdList.ATLASIUM("minimap farmax " .. value)
-            end
-            assert.equals(2.5, ns.db.minimapTiles.farMax)
-            for i = 2, 5 do
-                assert.equals(state.messages[1], state.messages[i])
-            end
         end)
 
         it("accepts the alignment check only in debug mode", function()
@@ -170,7 +160,7 @@ describe("Core", function()
             SlashCmdList.ATLASIUM("nonsense")
             SlashCmdList.ATLASIUM("zoom off")
             SlashCmdList.ATLASIUM("fog off")
-            SlashCmdList.ATLASIUM("")
+            SlashCmdList.ATLASIUM("help")
             assert.matches("commands:", state.messages[1])
             for i = 2, 4 do
                 assert.equals(state.messages[1], state.messages[i])
@@ -181,8 +171,8 @@ describe("Core", function()
 
         it("lists every subcommand in the help line", function()
             assert.equals(
-                "commands: /atlasium debug | version | minimap button on/off | minimap zoom on/off"
-                    .. " | minimap tiles on/off | minimap farmax <1.5-16>"
+                "commands: /atlasium settings | help | debug | version | minimap button on/off | minimap zoom on/off"
+                    .. " | minimap tiles on/off"
                     .. " | worldmap zoom on/off | worldmap fog on/off",
                 ns.Core.GetHelp()
             )
