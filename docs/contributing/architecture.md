@@ -11,6 +11,8 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Core.lua         event handling, saved-variable setup, the /atlasium command
   Log.lua          error and debug messages, in chat and in the saved log
   MinimapButton.lua  the minimap button and its position math
+  Data/MinimapTileData.lua  minimap tile names and zone bounds (generated, do not edit)
+  MinimapTiles.lua  terrain at every minimap zoom: tile math, texture swaps and the tile layer
   MinimapZoom.lua  mouse wheel zoom on the minimap
   Data/Overlays.lua  the world map overlays of all zones (generated, do not edit)
   FogClear.lua     fog clearing on the world map, and its tile math
@@ -18,6 +20,7 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Dev.lua          debug-mode aids for in-game checks: the map marker, fixed keys, AtlasiumDev
   DevConsole.lua   debug-mode dev console: runs Lua from tools/wow-dev.ps1, shows the result
 tests/             busted specs and WoW stubs (not part of the add-on)
+tools/             developer scripts, for example the generator of Data/MinimapTileData.lua
 docs/              documentation
 ```
 
@@ -40,7 +43,9 @@ The game loads files in `.toc` order. A file can use only the modules listed abo
 is first because `Core.lua` uses it. `MinimapButton.lua` comes after `Core.lua`, because it
 registers `PLAYER_LOGIN` with `Core.RegisterEvent` when it loads. `Log.lua` comes right after
 `Core.lua`, so every feature file can write to the log. `Data/Overlays.lua` comes
-before `FogClear.lua`, because `FogClear.lua` reads `ns.Overlays`.
+before `FogClear.lua`, because `FogClear.lua` reads `ns.Overlays`. `Data/MinimapTileData.lua` and
+`MinimapTiles.lua` come before `MinimapZoom.lua`, because the wheel handler calls
+`ns.MinimapTiles`.
 
 Code that needs saved settings or other add-ons waits for an event. For example, the minimap
 button is built on `PLAYER_LOGIN`: at that time `AtlasiumDB` is ready, and add-ons that define
@@ -61,6 +66,91 @@ add-ons, so the function exists. The map opens only after login, but the hook st
 The keys are the map names from `GetMapInfo()`. Overlay names keep the case from the game data, so
 compare them without case (`FogClear.OverlayKey`). The data does not change, so do not edit the
 file by hand. `tests/overlays_spec.lua` checks its shape.
+
+## Minimap tiles
+
+`MinimapTiles.lua` draws raw terrain under the Blizzard minimap at every zoom level.
+A transparent mask hides the Blizzard ground. The client still draws the player arrow and blips.
+Far levels extend zoom 0 on the same layer. Outdoor rendering is checked in the client.
+
+### Data
+
+`Data/MinimapTileData.lua` comes from the 3.3.5a files `md5translate.trs`, `Map.dbc`,
+`WorldMapArea.dbc` and `DungeonMap.dbc`. `tools/gen_minimap_tiles.py` writes it (see
+[Development](development.md#generate-the-minimap-tile-data)). Do not edit it by hand.
+
+- `tiles[folder]["x_y"]` is the file name of `Textures\Minimap\<md5>.blp`. Only the four continent
+  folders are in the data. A missing key is open sea.
+- `zones[mapName]` has the tile folder and the zone bounds in world yards. The keys are the map
+  names from `GetMapInfo()`, as in `ns.Overlays`. Continent maps are not in the table: they show
+  some zones of other continents, so a position on them can point at the wrong folder.
+- `floors[mapName][level]` has the bounds of a dungeon floor, for a zone that the world map shows
+  only as floors (Dalaran).
+
+`tests/minimap_tile_data_spec.lua` checks its shape and some known values.
+
+### Math
+
+The top half of the file is pure functions:
+
+1. `ZoneToWorld` turns the map position from `GetPlayerMapPosition` into world yards. Left and right
+   are world Y, top and bottom are world X.
+2. `WorldToTile` turns world yards into tile units. A tile is 533.33 yards. The column grows east
+   and the row grows south.
+3. `GetDiameter` uses the outdoor diameter for Blizzard zoom 0 through 5: 466.67, 400, 333.33,
+   266.67, 200 and 133.33 yards. At zoom 0, each far level multiplies it by `farStep`.
+4. `BuildSegments` covers the minimap shape with horizontal strips, 2 units high, that overlap by
+   0.35 units. It splits each strip where it crosses a tile edge. Each piece shows its part of one
+   tile through the 8 argument `SetTexCoord`, so the same code draws a rotated map.
+   `GetRowExtent` gives the width of each strip, from the round quarters in `Util.GetRoundQuarters`
+   (the same rule as the minimap button).
+
+### Layer
+
+The bottom half is the glue:
+
+- The layer is a child of `MinimapCluster`, anchored to `Minimap`, at the minimap level minus 1.
+  It uses the same frame strata. It has no mouse input and no separate player arrow.
+- In 3.3.5a, the world render covers ordinary textures in `BACKGROUND` strata.
+  The engine minimap still draws there. While tiles draw, Atlasium raises a background minimap
+  and its underlay to `LOW`. Fallback and tiles off restore the original strata.
+  A secure hook preserves later strata choices from other add-ons.
+- `SetMaskTexture` uses `Interface\WORLDMAP\Silithus\pixelfix1` to hide the Blizzard ground.
+  `SetBlipTexture` uses that transparent texture at far levels, where engine blip positions
+  still use the zoom 0 scale. At normal levels the blips return.
+- Secure hooks remember mask and blip paths set by other add-ons. While a swap is active,
+  Atlasium reapplies transparency. When it stops drawing, it restores the remembered paths.
+  Defaults are `Textures\MinimapMask` and `Interface\Minimap\ObjectIcons`.
+  A mask set before the hooks load is a known compatibility limit.
+- `PLAYER_ENTERING_WORLD` reapplies active transparent textures after world loading.
+  The engine can reset them without calling the Lua setters, so a state-change check alone
+  does not keep the ground hidden after login or reload.
+- An `OnUpdate` script runs while tiles are enabled, including during fallback.
+  At most 30 times a second it reads position, facing, shape, size and Blizzard zoom.
+  It draws again only when the view changes. Tile colors have no shade or lighting tint.
+- The position comes from the current world map. When the world map is closed and the map has
+  no position, the layer calls `SetMapToCurrentZone()`, at most once a second. While the world map
+  is open, the layer keeps the last position.
+- The textures come from a pool. A texture calls `SetTexture` only when its tile changes.
+- In an instance, indoors, in a WMO city, or without a position, the layer hides and leaves far zoom.
+  WMO city map names are `Ogrimmar`, `ThunderBluff`, `Darnassis`, `TheExodar` and `Ironforge`.
+  `IsIndoorZoom` compares the indoor and outdoor zoom CVars with the current zoom.
+- Debug alignment shows the tiles above the minimap at half alpha and keeps the Blizzard mask.
+  `/atlasium minimap align on|off` controls it at the current Blizzard zoom.
+
+`MinimapZoom.lua` sends the wheel to far zoom: wheel down at zoom 0 goes to the next far level
+(`CanZoomOut`), and wheel up above level 0 goes back one level. On `PLAYER_LOGIN`, far zoom wraps
+the `OnClick` script of `MinimapZoomIn`, so the + button also goes back one level.
+`MINIMAP_UPDATE_ZOOM` redraws immediately; a zoom other than 0 also leaves far zoom.
+Zone changes check fallback immediately after updating the current map.
+The wheel checks current fallback state before starting a far level.
+
+Settings live in `minimapTiles`: `enabled`, `farMax` and `farStep`.
+`/atlasium minimap tiles off` restores Blizzard textures. Wheel zoom has its own setting;
+turning it off leaves far zoom but keeps custom terrain enabled.
+
+Known limits: pins of other add-ons keep their zoom 0 positions, and the engine blips (party,
+tracking, herbs) do not show past zoom 0.
 
 ## Map navigation
 

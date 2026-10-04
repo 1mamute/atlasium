@@ -84,4 +84,21 @@ describe("Util", function()
             assert.same({ "c", "d", "e" }, list)
         end)
     end)
+
+    describe("GetRoundQuarters", function()
+        it("returns all four quarters for ROUND, nil and unknown shapes", function()
+            local all = { TOPLEFT = true, TOPRIGHT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true }
+            assert.same(all, Util.GetRoundQuarters("ROUND"))
+            assert.same(all, Util.GetRoundQuarters(nil))
+            assert.same(all, Util.GetRoundQuarters("STAR"))
+        end)
+
+        it("follows the shape name for corners, sides and tricorners", function()
+            assert.same({}, Util.GetRoundQuarters("SQUARE"))
+            assert.same({ TOPRIGHT = true }, Util.GetRoundQuarters("CORNER-TOPRIGHT"))
+            assert.same({ BOTTOMLEFT = true, BOTTOMRIGHT = true }, Util.GetRoundQuarters("SIDE-BOTTOM"))
+            assert.same({ TOPLEFT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true },
+                Util.GetRoundQuarters("TRICORNER-BOTTOMLEFT"))
+        end)
+    end)
 end)

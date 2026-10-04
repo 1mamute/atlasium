@@ -159,6 +159,11 @@ define("SetFrameLevel", function(self, level)
 end)
 define("GetFrameLevel", function(self) return self.frameLevel or 0 end)
 
+define("SetFrameStrata", function(self, strata) self.frameStrata = strata end)
+define("GetFrameStrata", function(self)
+    return self.frameStrata or (self.parent and self.parent:GetFrameStrata()) or "MEDIUM"
+end)
+
 define("EnableMouse", function(self, enabled) self.mouseEnabled = enabled and true or false end)
 define("IsMouseEnabled", function(self) return self.mouseEnabled or false end)
 define("EnableMouseWheel", function(self, enabled) self.wheelEnabled = enabled and true or false end)
@@ -334,6 +339,14 @@ local function installMapApi(state)
     _G.InCombatLockdown = function() return state.combat end
     _G.IsMouseButtonDown = function(button) return state.mouseDown[button] or false end
     _G.GetPlayerMapPosition = function() return state.player.x, state.player.y end
+    -- Like the client, SetMapToCurrentZone shows the player's zone: `state.zone` when a spec sets it.
+    _G.SetMapToCurrentZone = function()
+        state.mapResets = state.mapResets + 1
+        if state.zone then
+            state.map.name, state.map.level = state.zone.name, state.zone.level or 0
+            state.player.x, state.player.y = state.zone.x, state.zone.y
+        end
+    end
     _G.PositionWorldMapArrowFrame = function(...)
         -- Like the client, the relative frame must be a name: a frame object raises an error.
         assert(type((select(2, ...))) == "string", "relativeTo must be a frame name")
@@ -396,6 +409,15 @@ function helper.installWowStubs()
         arrowPositions = {}, -- argument lists of PositionWorldMapArrowFrame
         arrowShows = {}, -- argument lists of ShowWorldMapArrowFrame
         minimapZooms = {}, -- 1 for each Minimap_ZoomIn call, -1 for each Minimap_ZoomOut call
+        minimapZoom = 0, -- Minimap:GetZoom()
+        zoomInClicks = 0, -- calls of the Blizzard OnClick script of MinimapZoomIn
+        facing = 0, -- GetPlayerFacing()
+        indoors = false, -- IsIndoors()
+        instance = false, -- IsInInstance()
+        cvars = { rotateMinimap = "0", minimapZoom = "0", minimapInsideZoom = "0" }, -- GetCVar(name)
+        zone = nil, -- what SetMapToCurrentZone shows: { name, level, x, y }
+        mapResets = 0, -- SetMapToCurrentZone calls
+        sounds = {}, -- PlaySound names
         time = 0, -- GetTime(), in seconds
         focus = nil, -- GetCurrentKeyBoardFocus(): the edit box that has the keyboard
         errors = {}, -- messages that reached the default error handler
@@ -445,13 +467,28 @@ function helper.installWowStubs()
     _G.AtlasiumDB = nil
     _G.SLASH_ATLASIUM1 = nil
 
-    -- Default minimap: a fake frame, 140 x 140 at the top-right of a 1024 x 768 screen.
+    -- Default minimap: a fake frame, 140 x 140 at the top-right of a 1024 x 768 screen, in
+    -- MinimapCluster. SetMaskTexture and SetBlipTexture are recorded.
+    local cluster = createNamed("MinimapCluster", { frameLevel = 1 })
     _G.Minimap = helper.newFrame({
         name = "Minimap",
+        parent = cluster,
+        frameLevel = 2,
         width = 140,
         height = 140,
         GetCenter = function() return 940, 680 end,
+        GetZoom = function() return state.minimapZoom end,
+        frameStrata = "LOW",
     })
+    -- The Blizzard + button. Its OnClick script stands for Minimap_ZoomInClick.
+    local zoomIn = createNamed("MinimapZoomIn")
+    zoomIn:SetScript("OnClick", function() state.zoomInClicks = state.zoomInClicks + 1 end)
+    zoomIn.calls.SetScript = nil
+    _G.GetPlayerFacing = function() return state.facing end
+    _G.IsIndoors = function() return state.indoors end
+    _G.IsInInstance = function() return state.instance end
+    _G.GetCVar = function(name) return state.cvars[name] end
+    _G.PlaySound = function(name) table.insert(state.sounds, name) end
     -- Blizzard's Minimap_ZoomIn and Minimap_ZoomOut click the + and - buttons. The stubs add
     -- 1 or -1 to `state.minimapZooms`.
     _G.Minimap_ZoomIn = function() table.insert(state.minimapZooms, 1) end

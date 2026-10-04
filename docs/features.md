@@ -4,9 +4,10 @@ Atlasium is in early development. This page lists what it will do and what works
 
 | Feature | Status |
 | --- | --- |
-| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap button on` or `off`, `/atlasium minimap zoom on` or `off`, `/atlasium worldmap zoom on` or `off`, `/atlasium worldmap fog on` or `off`) | Available |
+| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap button on` or `off`, `/atlasium minimap zoom on` or `off`, `/atlasium minimap tiles on` or `off`, `/atlasium minimap farmax`, `/atlasium worldmap zoom on` or `off`, `/atlasium worldmap fog on` or `off`) | Available |
 | Minimap button | Available |
 | Minimap wheel zoom | Available |
+| Minimap tiles and far zoom | Available (experimental) |
 | Fog clearing | Available |
 | Smooth map navigation (drag and zoom) | Available |
 | Map notes | Planned |
@@ -23,6 +24,14 @@ to any spot around the minimap. See [Usage](usage.md#minimap-button).
 
 Turn the mouse wheel over the minimap to zoom it in or out, one step per notch, like the + and -
 buttons. See [Usage](usage.md#minimap-wheel-zoom).
+
+## Minimap tiles and far zoom
+
+The implementation draws raw minimap terrain at every zoom, without the game's lighting.
+Extra wheel steps extend the game's farthest zoom, up to a configured limit of 4 times by default.
+The tiles follow the minimap shape and rotation. Indoors, instances and some cities use the
+Blizzard minimap. Outdoor rendering is checked in the client; some field checks are still pending. See
+[Usage](usage.md#minimap-tiles-and-far-zoom) for controls and known limits.
 
 ## Fog clearing
 

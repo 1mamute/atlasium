@@ -7,26 +7,6 @@ ns.MinimapButton = MinimapButton
 local cos, sin, rad, deg, atan2 = math.cos, math.sin, math.rad, math.deg, math.atan2
 local sqrt, max, min = math.sqrt, math.max, math.min
 
--- Round quarters for each minimap shape, from the shape name: CORNER-<corner> is round only at that
--- corner, SIDE-<side> on that half, TRICORNER-<corner> everywhere except the opposite corner.
--- Do not check this against Questie's 3.3.5 LibDBIcon (Rev 15): its table swaps several shapes.
-local ROUND_QUARTERS = {
-    ROUND = { TOPLEFT = true, TOPRIGHT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true },
-    SQUARE = {},
-    ["CORNER-TOPLEFT"] = { TOPLEFT = true },
-    ["CORNER-TOPRIGHT"] = { TOPRIGHT = true },
-    ["CORNER-BOTTOMLEFT"] = { BOTTOMLEFT = true },
-    ["CORNER-BOTTOMRIGHT"] = { BOTTOMRIGHT = true },
-    ["SIDE-LEFT"] = { TOPLEFT = true, BOTTOMLEFT = true },
-    ["SIDE-RIGHT"] = { TOPRIGHT = true, BOTTOMRIGHT = true },
-    ["SIDE-TOP"] = { TOPLEFT = true, TOPRIGHT = true },
-    ["SIDE-BOTTOM"] = { BOTTOMLEFT = true, BOTTOMRIGHT = true },
-    ["TRICORNER-TOPLEFT"] = { TOPLEFT = true, TOPRIGHT = true, BOTTOMLEFT = true },
-    ["TRICORNER-TOPRIGHT"] = { TOPLEFT = true, TOPRIGHT = true, BOTTOMRIGHT = true },
-    ["TRICORNER-BOTTOMLEFT"] = { TOPLEFT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true },
-    ["TRICORNER-BOTTOMRIGHT"] = { TOPRIGHT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true },
-}
-
 -- Distance from the minimap edge to the button center, in pixels.
 local EDGE_OFFSET = 10
 
@@ -47,8 +27,7 @@ function MinimapButton.GetOffset(angle, width, height, shape)
         quarter = x < 0 and "BOTTOMLEFT" or "BOTTOMRIGHT"
     end
     local radiusX, radiusY = width / 2 + EDGE_OFFSET, height / 2 + EDGE_OFFSET
-    local round = ROUND_QUARTERS[shape] or ROUND_QUARTERS.ROUND
-    if round[quarter] then
+    if ns.Util.GetRoundQuarters(shape)[quarter] then
         return x * radiusX, y * radiusY
     end
     -- Square quarter: move out toward the corner (10 pixels short of it), then keep each axis on the edge.
