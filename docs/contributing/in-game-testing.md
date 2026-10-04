@@ -146,6 +146,15 @@ following points need a check in the game (they are not verified yet):
 - the key names that `OnKeyDown` receives match the names above;
 - the marker is visible above the open world map.
 
+## Minimap far zoom alignment check
+
+Debug mode adds the command `/atlasium minimap faralign on` (and `off`). It draws the far zoom tiles
+at the zoom 0 diameter, at half alpha, over the Blizzard minimap. Set the Blizzard minimap to zoom 0
+first. If the scale and the position are correct, the two maps match. The layer also shows its
+arrow at half alpha, so you can compare it with the Blizzard arrow. The layer lets the mouse
+through. Use the check outdoors, indoors and in a city. A wheel notch or
+`/atlasium minimap faralign off` ends it.
+
 ## With Claude Code
 
 The `ingame-check` project skill runs this loop. It runs the specs, then `status`, then `reload`. It

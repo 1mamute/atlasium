@@ -11,6 +11,9 @@ ns.defaults = {
     },
     minimapZoom = {
         enabled = true, -- the mouse wheel over the minimap changes its zoom level
+        far = true, -- the wheel zooms out past Blizzard's zoom 0 (MinimapFarZoom.lua)
+        farMax = 4, -- largest far zoom, as a factor of the zoom 0 diameter
+        farStep = 1.4, -- diameter multiplier per far level
     },
     fogClear = {
         enabled = true,
@@ -69,7 +72,8 @@ local function OnOff(enabled)
 end
 
 -- The submenus of the slash command, in help order. Each subcommand has a `get` that returns its
--- state and a `set(enabled)` that changes it.
+-- state and a `set(value)` that changes it. The value is on or off, or a number from `min` to `max`
+-- for `kind = "number"`. A `debugOnly` subcommand works and shows in the help only in debug mode.
 local SUBMENUS = {
     {
         name = "minimap",
@@ -82,6 +86,25 @@ local SUBMENUS = {
             name = "zoom",
             get = function() return ns.db.minimapZoom.enabled end,
             set = function(enabled) ns.MinimapZoom.SetEnabled(enabled) end,
+        },
+        {
+            name = "far",
+            get = function() return ns.db.minimapZoom.far end,
+            set = function(enabled) ns.MinimapFarZoom.SetEnabled(enabled) end,
+        },
+        {
+            name = "farmax",
+            kind = "number",
+            min = 1.5,
+            max = 16,
+            get = function() return ns.db.minimapZoom.farMax end,
+            set = function(factor) ns.MinimapFarZoom.SetMaxFactor(factor) end,
+        },
+        {
+            name = "faralign",
+            debugOnly = true,
+            get = function() return ns.MinimapFarZoom.align end,
+            set = function(enabled) ns.MinimapFarZoom.SetAlign(enabled) end,
         },
     },
     {
@@ -99,12 +122,33 @@ local SUBMENUS = {
     },
 }
 
+-- A debugOnly subcommand counts only in debug mode.
+local function IsAvailable(entry)
+    return not entry.debugOnly or ns.db.debug
+end
+
 local function FindByName(list, name)
     for _, entry in ipairs(list) do
-        if entry.name == name then
+        if entry.name == name and IsAvailable(entry) then
             return entry
         end
     end
+end
+
+-- The state of a subcommand, for example "on" or "4".
+local function FormatState(sub)
+    if sub.kind == "number" then
+        return tostring(sub.get())
+    end
+    return OnOff(sub.get())
+end
+
+-- The values a subcommand takes, for example "on/off" or "<1.5-16>".
+local function FormatValues(sub, separator)
+    if sub.kind == "number" then
+        return "<" .. sub.min .. "-" .. sub.max .. ">"
+    end
+    return "on" .. separator .. "off"
 end
 
 --- Return the help line, for example "commands: /atlasium debug | version | minimap button on/off".
@@ -112,20 +156,24 @@ function Core.GetHelp()
     local parts = { "debug", "version" }
     for _, submenu in ipairs(SUBMENUS) do
         for _, sub in ipairs(submenu) do
-            table.insert(parts, submenu.name .. " " .. sub.name .. " on/off")
+            if IsAvailable(sub) then
+                table.insert(parts, submenu.name .. " " .. sub.name .. " " .. FormatValues(sub, "/"))
+            end
         end
     end
     return "commands: /atlasium " .. table.concat(parts, " | ")
 end
 
 -- `/atlasium <submenu>` lists the subcommands and their state. `/atlasium <submenu> <sub> on | off`
--- changes one; without on or off it shows the state.
+-- (or a number) changes one; without a value it shows the state.
 local function HandleSubmenu(submenu, rest)
     local subName, arg = ns.Util.SplitCommand(rest)
     if subName == "" then
         local states = {}
         for _, sub in ipairs(submenu) do
-            table.insert(states, sub.name .. " " .. OnOff(sub.get()))
+            if IsAvailable(sub) then
+                table.insert(states, sub.name .. " " .. FormatState(sub))
+            end
         end
         Print(submenu.name .. ": " .. table.concat(states, ", "))
         return
@@ -136,11 +184,16 @@ local function HandleSubmenu(submenu, rest)
         return
     end
     arg = arg:lower()
-    if arg == "on" or arg == "off" then
+    if sub.kind == "number" then
+        local value = tonumber(arg)
+        if value and value >= sub.min and value <= sub.max then
+            sub.set(value)
+        end
+    elseif arg == "on" or arg == "off" then
         sub.set(arg == "on")
     end
     local command = submenu.name .. " " .. sub.name
-    Print(command .. " " .. OnOff(sub.get()) .. " (/atlasium " .. command .. " on | off)")
+    Print(command .. " " .. FormatState(sub) .. " (/atlasium " .. command .. " " .. FormatValues(sub, " | ") .. ")")
 end
 
 function Core.HandleSlash(msg)

@@ -334,6 +334,14 @@ local function installMapApi(state)
     _G.InCombatLockdown = function() return state.combat end
     _G.IsMouseButtonDown = function(button) return state.mouseDown[button] or false end
     _G.GetPlayerMapPosition = function() return state.player.x, state.player.y end
+    -- Like the client, SetMapToCurrentZone shows the player's zone: `state.zone` when a spec sets it.
+    _G.SetMapToCurrentZone = function()
+        state.mapResets = state.mapResets + 1
+        if state.zone then
+            state.map.name, state.map.level = state.zone.name, state.zone.level or 0
+            state.player.x, state.player.y = state.zone.x, state.zone.y
+        end
+    end
     _G.PositionWorldMapArrowFrame = function(...)
         -- Like the client, the relative frame must be a name: a frame object raises an error.
         assert(type((select(2, ...))) == "string", "relativeTo must be a frame name")
@@ -396,6 +404,15 @@ function helper.installWowStubs()
         arrowPositions = {}, -- argument lists of PositionWorldMapArrowFrame
         arrowShows = {}, -- argument lists of ShowWorldMapArrowFrame
         minimapZooms = {}, -- 1 for each Minimap_ZoomIn call, -1 for each Minimap_ZoomOut call
+        minimapZoom = 0, -- Minimap:GetZoom()
+        zoomInClicks = 0, -- calls of the Blizzard OnClick script of MinimapZoomIn
+        facing = 0, -- GetPlayerFacing()
+        indoors = false, -- IsIndoors()
+        instance = false, -- IsInInstance()
+        cvars = { rotateMinimap = "0", minimapZoom = "0", minimapInsideZoom = "0" }, -- GetCVar(name)
+        zone = nil, -- what SetMapToCurrentZone shows: { name, level, x, y }
+        mapResets = 0, -- SetMapToCurrentZone calls
+        sounds = {}, -- PlaySound names
     }
 
     for name in pairs(namedFrames) do
@@ -431,7 +448,21 @@ function helper.installWowStubs()
         width = 140,
         height = 140,
         GetCenter = function() return 940, 680 end,
+        GetZoom = function() return state.minimapZoom end,
     })
+    -- The minimap border. The client draws it above the minimap.
+    createNamed("MinimapBackdrop", { frameLevel = 3 })
+    -- The calendar button on the minimap edge. The clock (TimeManagerClockButton) loads on demand.
+    createNamed("GameTimeFrame", { frameLevel = 4 })
+    -- The Blizzard + button. Its OnClick script stands for Minimap_ZoomInClick.
+    local zoomIn = createNamed("MinimapZoomIn")
+    zoomIn:SetScript("OnClick", function() state.zoomInClicks = state.zoomInClicks + 1 end)
+    zoomIn.calls.SetScript = nil
+    _G.GetPlayerFacing = function() return state.facing end
+    _G.IsIndoors = function() return state.indoors end
+    _G.IsInInstance = function() return state.instance end
+    _G.GetCVar = function(name) return state.cvars[name] end
+    _G.PlaySound = function(name) table.insert(state.sounds, name) end
     -- Blizzard's Minimap_ZoomIn and Minimap_ZoomOut click the + and - buttons. The stubs add
     -- 1 or -1 to `state.minimapZooms`.
     _G.Minimap_ZoomIn = function() table.insert(state.minimapZooms, 1) end

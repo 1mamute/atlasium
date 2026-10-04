@@ -13,7 +13,10 @@ available commands.
 | `/atlasium minimap button on` | Shows the minimap button. |
 | `/atlasium minimap button off` | Hides the minimap button. |
 | `/atlasium minimap zoom on` | Turns minimap wheel zoom on. |
-| `/atlasium minimap zoom off` | Turns minimap wheel zoom off, so the wheel does nothing over the minimap. |
+| `/atlasium minimap zoom off` | Turns minimap wheel zoom off, so the wheel does nothing over the minimap. This also turns far zoom off. |
+| `/atlasium minimap far on` | Lets the wheel zoom the minimap out past the game's farthest zoom. |
+| `/atlasium minimap far off` | Stops the wheel at the game's farthest zoom. |
+| `/atlasium minimap farmax <number>` | Sets how far the far zoom goes, from 1.5 to 16 times the game's farthest zoom. The default is 4. |
 | `/atlasium worldmap` | Shows the world map settings and whether each one is on or off. |
 | `/atlasium worldmap zoom on` | Turns map zoom and drag on. |
 | `/atlasium worldmap zoom off` | Turns map zoom and drag off, so the map works as normal. |
@@ -47,6 +50,23 @@ edge.
 - If another add-on already uses the mouse wheel on the minimap, Atlasium leaves it alone.
 - Type `/atlasium minimap zoom off` to turn it off, and `/atlasium minimap zoom on` to turn it
   back on.
+
+## Minimap far zoom
+
+- At the game's farthest zoom, **wheel down** keeps zooming the minimap out. Each notch shows
+  1.4 times more, up to 4 times the game's farthest zoom (4 steps). Wheel up, or the + button,
+  zooms back in one step at a time, until the normal minimap shows again.
+- Atlasium draws the minimap terrain and your arrow itself. The border and the minimap buttons
+  stay as they are, and a square minimap from another add-on keeps its shape.
+- With the rotating minimap on (Interface options), the far map turns with you.
+- Far zoom works outdoors, indoors and in cities, but not in dungeons, raids, battlegrounds or
+  arenas. Entering one goes back to the normal minimap.
+- While zoomed out this far, the game's own dots (party members, herbs, ore, tracked
+  creatures) do not show. Icons from other add-ons, such as Questie and TomTom, stay where
+  they would be at the game's farthest zoom, so they do not match the far map.
+- Type `/atlasium minimap farmax 8` to zoom out up to 8 times, and `/atlasium minimap far off`
+  to stop the wheel at the game's farthest zoom again. `/atlasium minimap zoom off` turns far
+  zoom off as well.
 
 ## Fog clearing
 

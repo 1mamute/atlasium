@@ -16,13 +16,23 @@ function MinimapZoom.GetDirection(delta)
 end
 
 --- Handle one wheel notch. Minimap_ZoomIn and Minimap_ZoomOut click MinimapZoomIn and MinimapZoomOut:
--- a disabled button ignores the click, so a notch at a limit does nothing.
+-- a disabled button ignores the click, so a notch at a limit does nothing. Past zoom 0 the notch
+-- goes to far zoom (MinimapFarZoom.lua).
 function MinimapZoom.OnMouseWheel(_, delta)
     local direction = MinimapZoom.GetDirection(delta)
+    local far = ns.MinimapFarZoom
     if direction > 0 then
-        Minimap_ZoomIn()
+        if far.level > 0 then
+            far.ZoomIn()
+        else
+            Minimap_ZoomIn()
+        end
     elseif direction < 0 then
-        Minimap_ZoomOut()
+        if far.CanZoomOut() then
+            far.ZoomOut()
+        else
+            Minimap_ZoomOut()
+        end
     end
 end
 
@@ -37,8 +47,9 @@ local function Install()
     Minimap:SetScript("OnMouseWheel", MinimapZoom.OnMouseWheel)
 end
 
--- Remove our wheel handler. A handler of another add-on stays.
+-- Remove our wheel handler and leave far zoom. A handler of another add-on stays.
 local function Uninstall()
+    ns.MinimapFarZoom.Leave()
     if Minimap:GetScript("OnMouseWheel") == MinimapZoom.OnMouseWheel then
         Minimap:SetScript("OnMouseWheel", nil)
         Minimap:EnableMouseWheel(false)

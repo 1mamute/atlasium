@@ -57,4 +57,27 @@ CI runs the same two commands on every push, so check that they pass on your com
 Before you use a WoW function, event or widget method, check that it exists in 3.3.5a. Many modern
 APIs do not.
 
+## Generate the minimap tile data
+
+`Atlasium/Data/MinimapTileData.lua` comes from the game files. The game data does not change, so you
+need this only if you change the generator. CI does not run it.
+
+1. Install Python 3 and the MPQ reader `mpyq`:
+
+   ```
+   pip install mpyq
+   ```
+
+2. From the root of the repository, run the generator with your 3.3.5a folder:
+
+   ```
+   python tools/gen_minimap_tiles.py "<WoW folder>"
+   ```
+
+   Without the folder, the script reads `ATLASIUM_WOW_DIR` from `.env` in the repository root.
+
+3. The script prints the MPQ that each file came from, and the counts of zones and tiles. It
+   writes the data file again.
+4. Run `busted tests/minimap_tile_data_spec.lua` to check the result.
+
 Next: [Testing](testing.md) and [Conventions](conventions.md).

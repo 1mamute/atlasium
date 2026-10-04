@@ -4,6 +4,26 @@ local _, ns = ...
 local Util = {}
 ns.Util = Util
 
+-- Round quarters for each minimap shape, from the shape name: CORNER-<corner> is round only at that
+-- corner, SIDE-<side> on that half, TRICORNER-<corner> everywhere except the opposite corner.
+-- Do not check this against Questie's 3.3.5 LibDBIcon (Rev 15): its table swaps several shapes.
+local ROUND_QUARTERS = {
+    ROUND = { TOPLEFT = true, TOPRIGHT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true },
+    SQUARE = {},
+    ["CORNER-TOPLEFT"] = { TOPLEFT = true },
+    ["CORNER-TOPRIGHT"] = { TOPRIGHT = true },
+    ["CORNER-BOTTOMLEFT"] = { BOTTOMLEFT = true },
+    ["CORNER-BOTTOMRIGHT"] = { BOTTOMRIGHT = true },
+    ["SIDE-LEFT"] = { TOPLEFT = true, BOTTOMLEFT = true },
+    ["SIDE-RIGHT"] = { TOPRIGHT = true, BOTTOMRIGHT = true },
+    ["SIDE-TOP"] = { TOPLEFT = true, TOPRIGHT = true },
+    ["SIDE-BOTTOM"] = { BOTTOMLEFT = true, BOTTOMRIGHT = true },
+    ["TRICORNER-TOPLEFT"] = { TOPLEFT = true, TOPRIGHT = true, BOTTOMLEFT = true },
+    ["TRICORNER-TOPRIGHT"] = { TOPLEFT = true, TOPRIGHT = true, BOTTOMRIGHT = true },
+    ["TRICORNER-BOTTOMLEFT"] = { TOPLEFT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true },
+    ["TRICORNER-BOTTOMRIGHT"] = { TOPRIGHT = true, BOTTOMLEFT = true, BOTTOMRIGHT = true },
+}
+
 --- Recursively copy any key missing from `target` out of `defaults`.
 -- Existing values in `target` are never overwritten. Returns `target`.
 function Util.CopyDefaults(defaults, target)
@@ -48,4 +68,10 @@ function Util.AppendCapped(list, entry, max)
     while #list > max do
         table.remove(list, 1)
     end
+end
+
+--- Return the set of round quarters (TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT) for a
+-- GetMinimapShape() name. An unknown or nil `shape` counts as "ROUND".
+function Util.GetRoundQuarters(shape)
+    return ROUND_QUARTERS[shape] or ROUND_QUARTERS.ROUND
 end

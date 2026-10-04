@@ -11,12 +11,15 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Core.lua         event handling, saved-variable setup, the /atlasium command
   Log.lua          error and debug messages, in chat and in the saved log
   MinimapButton.lua  the minimap button and its position math
+  Data/MinimapTileData.lua  minimap tile names and zone bounds (generated, do not edit)
+  MinimapFarZoom.lua  minimap zoom past zoom 0: tile math and the tile layer
   MinimapZoom.lua  mouse wheel zoom on the minimap
   Data/Overlays.lua  the world map overlays of all zones (generated, do not edit)
   FogClear.lua     fog clearing on the world map, and its tile math
   MapNavigation.lua  zoom and drag on the world map
   Dev.lua          debug-mode aids for in-game checks: the map marker and fixed keys
 tests/             busted specs and WoW stubs (not part of the add-on)
+tools/             developer scripts, for example the generator of Data/MinimapTileData.lua
 docs/              documentation
 ```
 
@@ -39,7 +42,9 @@ The game loads files in `.toc` order. A file can use only the modules listed abo
 is first because `Core.lua` uses it. `MinimapButton.lua` comes after `Core.lua`, because it
 registers `PLAYER_LOGIN` with `Core.RegisterEvent` when it loads. `Log.lua` comes right after
 `Core.lua`, so every feature file can write to the log. `Data/Overlays.lua` comes
-before `FogClear.lua`, because `FogClear.lua` reads `ns.Overlays`.
+before `FogClear.lua`, because `FogClear.lua` reads `ns.Overlays`. `Data/MinimapTileData.lua` and
+`MinimapFarZoom.lua` come before `MinimapZoom.lua`, because the wheel handler calls
+`ns.MinimapFarZoom`.
 
 Code that needs saved settings or other add-ons waits for an event. For example, the minimap
 button is built on `PLAYER_LOGIN`: at that time `AtlasiumDB` is ready, and add-ons that define
@@ -60,6 +65,73 @@ add-ons, so the function exists. The map opens only after login, but the hook st
 The keys are the map names from `GetMapInfo()`. Overlay names keep the case from the game data, so
 compare them without case (`FogClear.OverlayKey`). The data does not change, so do not edit the
 file by hand. `tests/overlays_spec.lua` checks its shape.
+
+## Minimap far zoom
+
+Blizzard's minimap stops at zoom 0. Past zoom 0, `MinimapFarZoom.lua` draws the minimap terrain
+tiles itself, on a layer that covers the Blizzard minimap.
+
+### Data
+
+`Data/MinimapTileData.lua` comes from the 3.3.5a files `md5translate.trs`, `Map.dbc`,
+`WorldMapArea.dbc` and `DungeonMap.dbc`. `tools/gen_minimap_tiles.py` writes it (see
+[Development](development.md#generate-the-minimap-tile-data)). Do not edit it by hand.
+
+- `tiles[folder]["x_y"]` is the file name of `Textures\Minimap\<md5>.blp`. Only the four continent
+  folders are in the data. A missing key is open sea.
+- `zones[mapName]` has the tile folder and the zone bounds in world yards. The keys are the map
+  names from `GetMapInfo()`, as in `ns.Overlays`. Continent maps are not in the table: they show
+  some zones of other continents, so a position on them can point at the wrong folder.
+- `floors[mapName][level]` has the bounds of a dungeon floor, for a zone that the world map shows
+  only as floors (Dalaran).
+
+`tests/minimap_tile_data_spec.lua` checks its shape and some known values.
+
+### Math
+
+The top half of the file is pure functions:
+
+1. `ZoneToWorld` turns the map position from `GetPlayerMapPosition` into world yards. Left and right
+   are world Y, top and bottom are world X.
+2. `WorldToTile` turns world yards into tile units. A tile is 533.33 yards. The column grows east
+   and the row grows south.
+3. `GetDiameter` gives the minimap diameter at a far level: the zoom 0 diameter (466.67 yards
+   outdoors, 300 indoors, as in HereBeDragons) times `farStep` per level.
+4. `BuildSegments` covers the minimap shape with horizontal strips, 2 units high, that overlap by
+   0.35 units. It splits each strip where it crosses a tile edge. Each piece shows its part of one
+   tile through the 8 argument `SetTexCoord`, so the same code draws a rotated map.
+   `GetRowExtent` gives the width of each strip, from the round quarters in `Util.GetRoundQuarters`
+   (the same rule as the minimap button).
+
+### Layer
+
+The bottom half is the glue:
+
+- The layer is a child of `Minimap` at the minimap level + 1. Add-on pins at a higher level stay
+  above it. The Blizzard player arrow and the engine blips draw inside the minimap, so the layer
+  covers them. The layer has its own arrow, turned with `GetPlayerFacing()`. It copies the Blizzard
+  arrow, measured at zoom 0: 29 units wide, 1.8 units right of and 1.7 units above the minimap
+  centre. The engine turns its arrow around the texture centre, so the offset does not turn.
+- While the layer shows, the Blizzard frames on the minimap edge go above it, and back after.
+  `MinimapBackdrop` (the border) goes to the minimap level + 5. The mail, battlefield, calendar
+  (`GameTimeFrame`) and clock (`TimeManagerClockButton`) buttons go to + 6, so they stay above the
+  border. The clock loads on demand, so the layer skips it when it is missing. Do not hide
+  `Minimap`: that also hides the border and the pins of other add-ons.
+- An `OnUpdate` script runs only while the layer shows. At most 30 times a second it reads the
+  position, the facing, the shape and the size. It draws again only when one of them changed.
+- The position comes from the current world map. When the world map is closed and the map has
+  no position, the layer calls `SetMapToCurrentZone()`, at most once a second. While the world map
+  is open, the layer keeps the last position.
+- The textures come from a pool. A texture calls `SetTexture` only when its tile changes.
+- In an instance, or without a position, the layer goes back to zoom 0.
+
+`MinimapZoom.lua` sends the wheel to far zoom: wheel down at zoom 0 goes to the next far level
+(`CanZoomOut`), and wheel up above level 0 goes back one level. On `PLAYER_LOGIN`, far zoom wraps
+the `OnClick` script of `MinimapZoomIn`, so the + button also goes back one level.
+`MINIMAP_UPDATE_ZOOM` with a zoom other than 0 leaves far zoom.
+
+Known limits: pins of other add-ons keep their zoom 0 positions, and the engine blips (party,
+tracking, herbs) do not show past zoom 0.
 
 ## Map navigation
 

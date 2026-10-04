@@ -4,9 +4,10 @@ Atlasium is in early development. This page lists what it will do and what works
 
 | Feature | Status |
 | --- | --- |
-| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap button on` or `off`, `/atlasium minimap zoom on` or `off`, `/atlasium worldmap zoom on` or `off`, `/atlasium worldmap fog on` or `off`) | Available |
+| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap button on` or `off`, `/atlasium minimap zoom on` or `off`, `/atlasium minimap far on` or `off`, `/atlasium minimap farmax`, `/atlasium worldmap zoom on` or `off`, `/atlasium worldmap fog on` or `off`) | Available |
 | Minimap button | Available |
 | Minimap wheel zoom | Available |
+| Minimap far zoom | Available |
 | Fog clearing | Available |
 | Smooth map navigation (drag and zoom) | Available |
 | Map notes | Planned |
@@ -23,6 +24,13 @@ to any spot around the minimap. See [Usage](usage.md#minimap-button).
 
 Turn the mouse wheel over the minimap to zoom it in or out, one step per notch, like the + and -
 buttons. See [Usage](usage.md#minimap-wheel-zoom).
+
+## Minimap far zoom
+
+Keep turning the wheel past the game's farthest zoom and the minimap goes on zooming out, up to
+4 times farther by default. Atlasium draws the real minimap terrain itself, in the shape of your
+minimap, and turns it with you if you use the rotating minimap. See
+[Usage](usage.md#minimap-far-zoom).
 
 ## Fog clearing
 

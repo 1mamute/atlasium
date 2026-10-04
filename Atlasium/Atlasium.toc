@@ -9,6 +9,8 @@ Util.lua
 Core.lua
 Log.lua
 MinimapButton.lua
+Data\MinimapTileData.lua
+MinimapFarZoom.lua
 MinimapZoom.lua
 Data\Overlays.lua
 FogClear.lua
