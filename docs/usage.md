@@ -12,6 +12,8 @@ available commands.
 | `/atlasium minimap` | Shows the minimap settings and whether each one is on or off. |
 | `/atlasium minimap button on` | Shows the minimap button. |
 | `/atlasium minimap button off` | Hides the minimap button. |
+| `/atlasium minimap zoom on` | Turns minimap wheel zoom on. |
+| `/atlasium minimap zoom off` | Turns minimap wheel zoom off, so the wheel does nothing over the minimap. |
 | `/atlasium worldmap` | Shows the world map settings and whether each one is on or off. |
 | `/atlasium worldmap zoom on` | Turns map zoom and drag on. |
 | `/atlasium worldmap zoom off` | Turns map zoom and drag off, so the map works as normal. |
@@ -34,6 +36,17 @@ is a placeholder until Atlasium gets its own icon.
 
 If an add-on such as SexyMap gives your minimap a square shape, the button follows the square
 edge.
+
+## Minimap wheel zoom
+
+- **Mouse wheel up** over the minimap zooms in one step, **wheel down** zooms out one step. It
+  works just like the + and - buttons next to the minimap, and the buttons stay in sync.
+- At the closest or farthest zoom, more turns of the wheel do nothing.
+- A plain click on the minimap still pings it, as normal.
+- The game keeps one zoom for indoors and one for outdoors, as it always does.
+- If another add-on already uses the mouse wheel on the minimap, Atlasium leaves it alone.
+- Type `/atlasium minimap zoom off` to turn it off, and `/atlasium minimap zoom on` to turn it
+  back on.
 
 ## Fog clearing
 

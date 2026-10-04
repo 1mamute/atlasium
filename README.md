@@ -3,14 +3,15 @@
 A map add-on for World of Warcraft 3.3.5a (WotLK) that makes the world map feel like a modern web
 map, and makes exploring with a group easier.
 
-> **Status: early development.** Atlasium loads, shows a minimap button, clears the fog on the
-> world map, lets you zoom and drag the world map and answers a few slash commands. The other
-> features below are planned and not built yet.
+> **Status: early development.** Atlasium loads, shows a minimap button, zooms the minimap with
+> the mouse wheel, clears the fog on the world map, lets you zoom and drag the world map and
+> answers a few slash commands. The other features below are planned and not built yet.
 > There is no release to download.
 
 ## Features
 
 - **Smooth map navigation**: drag and zoom the world map the way you do in Google Maps (available).
+- **Minimap wheel zoom**: zoom the minimap with the mouse wheel (available).
 - **Map notes**: pin your own notes on the map.
 - **TomTom integration**: set and follow waypoints with TomTom's arrow.
 - **Questie integration**: see Questie's quests and objectives on the Atlasium map.

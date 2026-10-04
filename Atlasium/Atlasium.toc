@@ -8,6 +8,7 @@
 Util.lua
 Core.lua
 MinimapButton.lua
+MinimapZoom.lua
 Data\Overlays.lua
 FogClear.lua
 MapNavigation.lua

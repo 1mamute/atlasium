@@ -8,6 +8,7 @@ describe("Core", function()
         ns = helper.newNamespace()
         helper.loadAddonFile("Atlasium/Util.lua", ns)
         helper.loadAddonFile("Atlasium/Core.lua", ns)
+        helper.loadAddonFile("Atlasium/MinimapZoom.lua", ns)
         helper.loadAddonFile("Atlasium/MapNavigation.lua", ns)
         helper.loadAddonFile("Atlasium/Dev.lua", ns)
     end)
@@ -89,6 +90,16 @@ describe("Core", function()
             assert.same({ false, true }, calls)
         end)
 
+        it("turns minimap zoom off and on, and prints the new state", function()
+            SlashCmdList.ATLASIUM("minimap zoom off")
+            assert.is_false(ns.db.minimapZoom.enabled)
+            assert.matches("minimap zoom off %(/atlasium minimap zoom on | off%)", state.messages[1])
+            SlashCmdList.ATLASIUM("minimap zoom on")
+            assert.is_true(ns.db.minimapZoom.enabled)
+            assert.equals(ns.MinimapZoom.OnMouseWheel, Minimap:GetScript("OnMouseWheel"))
+            assert.matches("minimap zoom on", state.messages[2])
+        end)
+
         it("prints the zoom state without on or off", function()
             local called = false
             ns.MapNavigation.SetEnabled = function() called = true end
@@ -105,7 +116,7 @@ describe("Core", function()
             ns.db.minimap.hide = true
             SlashCmdList.ATLASIUM("minimap")
             assert.matches("worldmap: zoom on, fog off$", state.messages[1])
-            assert.matches("minimap: button off$", state.messages[2])
+            assert.matches("minimap: button off, zoom on$", state.messages[2])
         end)
 
         it("prints help for an unknown subcommand", function()
@@ -131,8 +142,8 @@ describe("Core", function()
 
         it("lists every subcommand in the help line", function()
             assert.equals(
-                "commands: /atlasium debug | version | minimap button on/off | worldmap zoom on/off"
-                    .. " | worldmap fog on/off",
+                "commands: /atlasium debug | version | minimap button on/off | minimap zoom on/off"
+                    .. " | worldmap zoom on/off | worldmap fog on/off",
                 ns.Core.GetHelp()
             )
         end)

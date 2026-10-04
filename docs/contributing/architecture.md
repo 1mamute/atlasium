@@ -10,6 +10,7 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Util.lua         pure helper functions that do not call the WoW API
   Core.lua         event handling, saved-variable setup, the /atlasium command
   MinimapButton.lua  the minimap button and its position math
+  MinimapZoom.lua  mouse wheel zoom on the minimap
   Data/Overlays.lua  the world map overlays of all zones (generated, do not edit)
   FogClear.lua     fog clearing on the world map, and its tile math
   MapNavigation.lua  zoom and drag on the world map
