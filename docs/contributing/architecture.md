@@ -15,7 +15,8 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Data/Overlays.lua  the world map overlays of all zones (generated, do not edit)
   FogClear.lua     fog clearing on the world map, and its tile math
   MapNavigation.lua  zoom and drag on the world map
-  Dev.lua          debug-mode aids for in-game checks: the map marker and fixed keys
+  Dev.lua          debug-mode aids for in-game checks: the map marker, fixed keys, AtlasiumDev
+  DevConsole.lua   debug-mode dev console: runs Lua from tools/wow-dev.ps1, shows the result
 tests/             busted specs and WoW stubs (not part of the add-on)
 docs/              documentation
 ```
@@ -30,8 +31,8 @@ local ADDON_NAME, ns = ...
 
 The game passes two values to each file in the `.toc`: the add-on name and one shared table. Each
 module attaches itself to this table (`ns.Util`, `ns.Core`), so you do not need globals. The only
-globals are the saved variable `AtlasiumDB`, the slash command and frame names that start with
-`Atlasium` (see [Conventions](conventions.md#structure)).
+globals are the saved variable `AtlasiumDB`, the slash command, frame names that start with
+`Atlasium` and, in debug mode only, `AtlasiumDev` (see [Conventions](conventions.md#structure)).
 
 ## Load order
 
@@ -108,7 +109,29 @@ It also goes to `AtlasiumDB.log` as one string with the time, for example
 - Before `ADDON_LOADED` the saved variables do not exist. Then an error goes only to chat, and a
   debug message is dropped.
 
-The log does not catch Lua errors. Those still go to the Blizzard error handler.
+In debug mode the log also catches Lua errors. `Log.SetErrorCapture` puts a handler in front of the
+current error handler (`seterrorhandler`):
+
+- An error from a file in `AddOns\Atlasium\` goes to `Log.Error` as `Lua error: <message>`.
+  `Log.errorCount` and `Log.lastError` count and keep it for the health report.
+- Every error, also from other add-ons, then goes on to the previous handler, so the Blizzard error
+  frame or BugGrabber still shows it.
+- The capture starts on `ADDON_LOADED` when debug mode is saved as on, so errors in `PLAYER_LOGIN`
+  handlers count too. `Dev.Update` turns it on and off with debug mode.
+- When debug mode goes off, the previous handler comes back, but only if no other add-on set a
+  handler after Atlasium. Else the Atlasium handler stays in the chain and only passes errors on.
+- BugGrabber makes `seterrorhandler` do nothing. Then the capture registers for its
+  `BugGrabber_BugGrabbed` and `BugGrabber_BugGrabbedAgain` callbacks instead. BugGrabber writes the
+  path as `Atlasium-<version>\<file>`, so `Log.IsAddonError` accepts that form too. It reads only the
+  first line, because the stack lines name other add-ons. BugGrabber gets its callbacks only when
+  CallbackHandler-1.0 is loaded, often after Atlasium. So the capture tries again on `PLAYER_LOGIN`,
+  and errors before that go only to BugGrabber.
+- If another add-on blocks `seterrorhandler` and BugGrabber has no callbacks on `PLAYER_LOGIN`, the
+  capture stays off, and a debug message says so once.
+- `Log.GetErrorCapture()` returns `handler`, `BugGrabber` or `off`. The health report shows it, so
+  `errors = 0` with the capture off does not read as a clean load.
+
+Without debug mode, Lua errors go only to the Blizzard error handler.
 
 ## Keep code testable
 
