@@ -60,9 +60,11 @@ file by hand. `tests/overlays_spec.lua` checks its shape.
 
 ## Map navigation
 
-`MapNavigation.lua` builds its frames the first time the map opens. It moves the Blizzard map frames`n(`WorldMapDetailFrame`, `WorldMapBlobFrame`, `WorldMapButton` and `WorldMapPOIFrame`) into this tree:
+`MapNavigation.lua` builds its frames the first time the map opens. It moves the Blizzard map frames
+(`WorldMapDetailFrame`, `WorldMapBlobFrame`, `WorldMapButton` and `WorldMapPOIFrame`) into this tree:
 
-```n WorldMapFrame
+```
+WorldMapFrame
    viewport     ScrollFrame where the map was; it clips the map
      scrollChild  scrolled by the drag
        zoomFrame  scaled by the zoom; holds the Blizzard map frames
