@@ -417,7 +417,6 @@ function helper.installWowStubs()
         cvars = { rotateMinimap = "0", minimapZoom = "0", minimapInsideZoom = "0" }, -- GetCVar(name)
         zone = nil, -- what SetMapToCurrentZone shows: { name, level, x, y }
         mapResets = 0, -- SetMapToCurrentZone calls
-        sounds = {}, -- PlaySound names
         time = 0, -- GetTime(), in seconds
         focus = nil, -- GetCurrentKeyBoardFocus(): the edit box that has the keyboard
         errors = {}, -- messages that reached the default error handler
@@ -488,7 +487,6 @@ function helper.installWowStubs()
     _G.IsIndoors = function() return state.indoors end
     _G.IsInInstance = function() return state.instance end
     _G.GetCVar = function(name) return state.cvars[name] end
-    _G.PlaySound = function(name) table.insert(state.sounds, name) end
     -- Blizzard's Minimap_ZoomIn and Minimap_ZoomOut click the + and - buttons. The stubs add
     -- 1 or -1 to `state.minimapZooms`.
     _G.Minimap_ZoomIn = function() table.insert(state.minimapZooms, 1) end

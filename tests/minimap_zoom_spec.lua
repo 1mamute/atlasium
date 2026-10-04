@@ -19,8 +19,6 @@ describe("MinimapZoom", function()
         helper.loadAddonFile("Atlasium/Util.lua", ns)
         helper.loadAddonFile("Atlasium/Core.lua", ns)
         helper.loadAddonFile("Atlasium/Log.lua", ns)
-        helper.loadAddonFile("Atlasium/Data/MinimapTileData.lua", ns)
-        helper.loadAddonFile("Atlasium/MinimapTiles.lua", ns)
         helper.loadAddonFile("Atlasium/MinimapZoom.lua", ns)
         MinimapZoom = ns.MinimapZoom
     end)

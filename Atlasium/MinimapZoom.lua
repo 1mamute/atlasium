@@ -15,24 +15,13 @@ function MinimapZoom.GetDirection(delta)
     return 0
 end
 
---- Handle one wheel notch. Minimap_ZoomIn and Minimap_ZoomOut click MinimapZoomIn and MinimapZoomOut:
--- a disabled button ignores the click, so a notch at a limit does nothing. Past zoom 0 the notch
--- goes to far levels (MinimapTiles.lua).
+--- Handle one wheel notch through Blizzard's buttons, which enforce the native zoom limits.
 function MinimapZoom.OnMouseWheel(_, delta)
     local direction = MinimapZoom.GetDirection(delta)
-    local tiles = ns.MinimapTiles
     if direction > 0 then
-        if tiles.level > 0 then
-            tiles.ZoomIn()
-        else
-            Minimap_ZoomIn()
-        end
+        Minimap_ZoomIn()
     elseif direction < 0 then
-        if tiles.CanZoomOut() then
-            tiles.ZoomOut()
-        else
-            Minimap_ZoomOut()
-        end
+        Minimap_ZoomOut()
     end
 end
 
@@ -47,9 +36,8 @@ local function Install()
     Minimap:SetScript("OnMouseWheel", MinimapZoom.OnMouseWheel)
 end
 
--- Remove our wheel handler and leave far zoom. A handler of another add-on stays.
+-- Remove our wheel handler. A handler of another add-on stays.
 local function Uninstall()
-    ns.MinimapTiles.Leave()
     if Minimap:GetScript("OnMouseWheel") == MinimapZoom.OnMouseWheel then
         Minimap:SetScript("OnMouseWheel", nil)
         Minimap:EnableMouseWheel(false)

@@ -13,9 +13,7 @@ ns.defaults = {
         enabled = true, -- the mouse wheel over the minimap changes its zoom level
     },
     minimapTiles = {
-        enabled = true, -- Atlasium draws the minimap ground, and the wheel zooms past zoom 0 (MinimapTiles.lua)
-        farMax = 4, -- largest far zoom, as a factor of the zoom 0 diameter
-        farStep = 1.4, -- diameter multiplier per far level
+        enabled = true, -- Atlasium draws the minimap ground at Blizzard zoom levels (MinimapTiles.lua)
     },
     fogClear = {
         enabled = true,
@@ -74,8 +72,8 @@ local function OnOff(enabled)
 end
 
 -- The submenus of the slash command, in help order. Each subcommand has a `get` that returns its
--- state and a `set(value)` that changes it. The value is on or off, or a number from `min` to `max`
--- for `kind = "number"`. A `debugOnly` subcommand works and shows in the help only in debug mode.
+-- state and a `set(value)` that changes it. The value is on or off. A `debugOnly` subcommand
+-- works and shows in the help only in debug mode.
 local SUBMENUS = {
     {
         name = "minimap",
@@ -93,14 +91,6 @@ local SUBMENUS = {
             name = "tiles",
             get = function() return ns.db.minimapTiles.enabled end,
             set = function(enabled) ns.MinimapTiles.SetEnabled(enabled) end,
-        },
-        {
-            name = "farmax",
-            kind = "number",
-            min = 1.5,
-            max = 16,
-            get = function() return ns.db.minimapTiles.farMax end,
-            set = function(factor) ns.MinimapTiles.SetMaxFactor(factor) end,
         },
         {
             name = "align",
@@ -137,19 +127,13 @@ local function FindByName(list, name)
     end
 end
 
--- The state of a subcommand, for example "on" or "4".
+-- The state of a subcommand, "on" or "off".
 local function FormatState(sub)
-    if sub.kind == "number" then
-        return tostring(sub.get())
-    end
     return OnOff(sub.get())
 end
 
--- The values a subcommand takes, for example "on/off" or "<1.5-16>".
-local function FormatValues(sub, separator)
-    if sub.kind == "number" then
-        return "<" .. sub.min .. "-" .. sub.max .. ">"
-    end
+-- The values a subcommand takes, "on/off" or "on | off".
+local function FormatValues(separator)
     return "on" .. separator .. "off"
 end
 
@@ -159,7 +143,7 @@ function Core.GetHelp()
     for _, submenu in ipairs(SUBMENUS) do
         for _, sub in ipairs(submenu) do
             if IsAvailable(sub) then
-                table.insert(parts, submenu.name .. " " .. sub.name .. " " .. FormatValues(sub, "/"))
+                table.insert(parts, submenu.name .. " " .. sub.name .. " " .. FormatValues("/"))
             end
         end
     end
@@ -167,7 +151,7 @@ function Core.GetHelp()
 end
 
 -- `/atlasium <submenu>` lists the subcommands and their state. `/atlasium <submenu> <sub> on | off`
--- (or a number) changes one; without a value it shows the state.
+-- changes one; without a value it shows the state.
 local function HandleSubmenu(submenu, rest)
     local subName, arg = ns.Util.SplitCommand(rest)
     if subName == "" then
@@ -186,16 +170,11 @@ local function HandleSubmenu(submenu, rest)
         return
     end
     arg = arg:lower()
-    if sub.kind == "number" then
-        local value = tonumber(arg)
-        if value and value >= sub.min and value <= sub.max then
-            sub.set(value)
-        end
-    elseif arg == "on" or arg == "off" then
+    if arg == "on" or arg == "off" then
         sub.set(arg == "on")
     end
     local command = submenu.name .. " " .. sub.name
-    Print(command .. " " .. FormatState(sub) .. " (/atlasium " .. command .. " " .. FormatValues(sub, " | ") .. ")")
+    Print(command .. " " .. FormatState(sub) .. " (/atlasium " .. command .. " " .. FormatValues(" | ") .. ")")
 end
 
 function Core.HandleSlash(msg)
