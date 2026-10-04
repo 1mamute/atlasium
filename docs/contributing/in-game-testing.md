@@ -146,14 +146,54 @@ following points need a check in the game (they are not verified yet):
 - the key names that `OnKeyDown` receives match the names above;
 - the marker is visible above the open world map.
 
-## Minimap far zoom alignment check
+## Minimap tiles alignment check
 
-Debug mode adds the command `/atlasium minimap faralign on` (and `off`). It draws the far zoom tiles
-at the zoom 0 diameter, at half alpha, over the Blizzard minimap. Set the Blizzard minimap to zoom 0
-first. If the scale and the position are correct, the two maps match. The layer also shows its
-arrow at half alpha, so you can compare it with the Blizzard arrow. The layer lets the mouse
-through. Use the check outdoors, indoors and in a city. A wheel notch or
-`/atlasium minimap faralign off` ends it.
+Debug mode adds `/atlasium minimap align on` and `off`. It draws the tiles at the current Blizzard
+zoom, at half alpha, over the Blizzard ground. The Blizzard mask stays in place during this check.
+If the scale and position are correct, the two maps match. The layer lets the mouse through.
+Use the check outdoors. Indoor areas, instances and WMO cities use the Blizzard minimap.
+A far zoom step or `/atlasium minimap align off` ends the check.
+
+Use the Blizzard + and - buttons to choose zoom levels during alignment checks.
+The current zoom and indoor/outdoor CVars must agree for the fallback check.
+
+Run these checks when changing the renderer:
+
+1. Compare alignment at Blizzard zoom levels 0 through 5.
+2. Track Flight Masters and check an engine dot over the custom terrain.
+3. Enter a far level. Check that engine dots disappear and the player arrow stays visible.
+4. Enter a cave, Orgrimmar and an instance. Check that the Blizzard minimap returns.
+5. Test a square minimap and the rotating minimap option.
+6. Check frame rate while running and turning.
+7. Check Dalaran floors, open sea and zone changes.
+8. Open the world map, then reload the interface. Check the terrain and texture restoration.
+9. Turn tiles off. Check that another add-on's mask and blip textures return.
+
+Checks on 2026-10-04 at Razormane Grounds:
+
+- Automated checks: 319 specs pass; luacheck reports no warnings or errors.
+- Alignment overlays at zoom 0 through 5 look consistent.
+- Far levels 1 and 4 render after a normal reload. The engine player arrow stays visible.
+- Tiles off restores Blizzard terrain and the original `BACKGROUND` strata.
+- Opening and closing the world map leaves the custom minimap working.
+- Rotation and a simulated square shape render at normal and far zoom.
+  This checks the renderer, not integration with a square minimap add-on.
+
+The failure had two causes. The world render covered the underlay in `BACKGROUND` strata.
+The transparent mask also needed reapplication after loading. The renderer now raises a
+background minimap to `LOW` while drawing and reapplies active swaps on `PLAYER_ENTERING_WORLD`.
+
+Remaining field checks: an engine-only tracking blip, cave/city/instance fallback, performance
+while running and turning, Dalaran floors, open sea, zone transitions and a real square minimap add-on.
+Flight Master tracking produced no visible blip at this location, so that check is incomplete.
+The original plan and TODO remain open until those checks pass.
+
+The final BugGrabber session has two errors from diagnostic commands: an unavailable
+`GetNumErrors` method and an incorrect slash-handler name. Neither error comes from Atlasium.
+The installed BugGrabber supports `GetDB()` and `GetSessionId()` for reading current-session errors.
+
+Run `wow-dev.ps1` with desktop access when the sandbox reports `NOT_RUNNING` for a present process.
+A zero window handle inside the sandbox does not prove that the client is stopped.
 
 ## With Claude Code
 

@@ -193,6 +193,7 @@ local swaps = {
     blips = { method = "SetBlipTexture", saved = "Interface\\Minimap\\ObjectIcons", clear = false },
 }
 local swapping = false
+local raisedStrata, settingStrata
 
 local driver, layer
 local pool, paths, used, shown = {}, {}, 0, 0
@@ -227,6 +228,33 @@ for _, swap in pairs(swaps) do
             CallSwap(swap, CLEAR)
         end
     end)
+end
+
+-- BACKGROUND textures are covered by the world render in 3.3.5a, even when the engine minimap
+-- remains visible. Move both the minimap and its underlay to LOW while drawing there.
+local function SetMinimapStrata(strata)
+    settingStrata = true
+    Minimap:SetFrameStrata(strata)
+    settingStrata = false
+end
+
+hooksecurefunc(Minimap, "SetFrameStrata", function()
+    if not settingStrata then
+        -- A new choice from another add-on takes precedence over the strata we saved.
+        raisedStrata = nil
+    end
+end)
+
+local function SyncLayerStrata()
+    local strata = Minimap:GetFrameStrata()
+    if strata == "BACKGROUND" then
+        raisedStrata = strata
+        strata = "LOW"
+        SetMinimapStrata(strata)
+    end
+    if layer:GetFrameStrata() ~= strata then
+        layer:SetFrameStrata(strata)
+    end
 end
 
 local function GetTilePath(tx, ty)
@@ -332,6 +360,10 @@ local function StopDrawing()
     if layer then
         layer:Hide()
     end
+    if raisedStrata then
+        SetMinimapStrata(raisedStrata)
+        raisedStrata = nil
+    end
 end
 
 -- Show the tiles under a transparent mask. The alignment check shows them at half alpha over the
@@ -340,6 +372,7 @@ local function StartDrawing()
     if not layer then
         CreateLayer()
     end
+    SyncLayerStrata()
     local level = Minimap:GetFrameLevel()
     layer:SetFrameLevel(Tiles.align and level + 1 or max(level - 1, 0))
     layer:SetAlpha(Tiles.align and 0.5 or 1)
@@ -421,14 +454,15 @@ end
 --- Return true when the wheel can zoom out past the current level: the tiles are on and drawn, and
 -- the Blizzard minimap is at zoom 0.
 function Tiles.CanZoomOut()
-    if not ns.db.minimapTiles.enabled or Minimap:GetZoom() ~= 0 or Tiles.level >= Tiles.GetMaxLevel() then
+    if not ns.db.minimapTiles.enabled or Minimap:GetZoom() ~= 0 then
         return false
     end
     if not drawing then
         sinceRetry = RETRY_INTERVAL
-        Update(0)
     end
-    return drawing
+    -- A wheel notch can arrive before the next position check after entering a fallback area.
+    Update(0)
+    return drawing and Tiles.level < Tiles.GetMaxLevel()
 end
 
 --- Zoom out one far level.
@@ -495,17 +529,35 @@ ns.Core.RegisterEvent("PLAYER_LOGIN", function()
     end
 end)
 
+-- The engine can reset minimap textures during world loading without running the Lua setters.
+-- Reapply active swaps after loading, even when our desired clear state did not change.
+ns.Core.RegisterEvent("PLAYER_ENTERING_WORLD", function()
+    if ns.db and ns.db.minimapTiles.enabled then
+        Refresh()
+        for _, swap in pairs(swaps) do
+            if swap.clear then
+                CallSwap(swap, CLEAR)
+            end
+        end
+    end
+end)
+
 -- Another add-on or the client changed the Blizzard zoom: far levels need zoom 0.
 ns.Core.RegisterEvent("MINIMAP_UPDATE_ZOOM", function()
     if Tiles.level > 0 and Minimap:GetZoom() ~= 0 then
         Tiles.Leave()
+    elseif ns.db.minimapTiles.enabled then
+        Update(0)
     end
 end)
 
 -- The client keeps the current map when the player walks into another zone with the world map
 -- closed. Set it to the new zone, so the WMO city check sees the city.
 ns.Core.RegisterEvent("ZONE_CHANGED_NEW_AREA", function()
-    if ns.db.minimapTiles.enabled and not WorldMapFrame:IsShown() then
-        SetMapToCurrentZone()
+    if ns.db.minimapTiles.enabled then
+        if not WorldMapFrame:IsShown() then
+            SetMapToCurrentZone()
+        end
+        Update(0)
     end
 end)

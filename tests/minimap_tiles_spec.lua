@@ -320,6 +320,76 @@ describe("MinimapTiles", function()
             near(133.3333 / TILE, across(), 1e-3)
         end)
 
+        it("raises a background minimap so the world cannot cover the tiles, and restores it", function()
+            Minimap:SetFrameStrata("BACKGROUND")
+            login()
+            assert.equals("LOW", Minimap:GetFrameStrata())
+            assert.equals("LOW", layer():GetFrameStrata())
+            assert.equals(Minimap:GetFrameLevel() - 1, layer():GetFrameLevel())
+            Tiles.SetEnabled(false)
+            assert.equals("BACKGROUND", Minimap:GetFrameStrata())
+        end)
+
+        it("restores background strata during fallback and raises it on return", function()
+            Minimap:SetFrameStrata("BACKGROUND")
+            login()
+            state.instance = 1
+            tick()
+            assert.equals("BACKGROUND", Minimap:GetFrameStrata())
+            state.instance = nil
+            tick()
+            assert.equals("LOW", Minimap:GetFrameStrata())
+            assert.equals("LOW", layer():GetFrameStrata())
+        end)
+
+        it("preserves another add-on's strata change while drawing", function()
+            Minimap:SetFrameStrata("BACKGROUND")
+            login()
+            Minimap:SetFrameStrata("HIGH")
+            tick()
+            assert.equals("HIGH", layer():GetFrameStrata())
+            Tiles.SetEnabled(false)
+            assert.equals("HIGH", Minimap:GetFrameStrata())
+        end)
+
+        it("reapplies active transparent textures after entering the world", function()
+            login()
+            wheel(-1)
+            -- Simulate the engine resetting textures without calling the Lua methods or hooks.
+            Minimap.calls.SetMaskTexture = nil
+            Minimap.calls.SetBlipTexture = nil
+            ns.Core.OnEvent(nil, "PLAYER_ENTERING_WORLD")
+            assert.equals(CLEAR, lastPath("SetMaskTexture"))
+            assert.equals(CLEAR, lastPath("SetBlipTexture"))
+            assert.equals(1, Tiles.level)
+        end)
+
+        it("reapplies only the mask at normal zoom and keeps texture ownership", function()
+            login()
+            Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8X8")
+            Minimap:SetBlipTexture("OtherAddon\\Blips")
+            Minimap.calls.SetMaskTexture = nil
+            Minimap.calls.SetBlipTexture = nil
+            ns.Core.OnEvent(nil, "PLAYER_ENTERING_WORLD")
+            assert.equals(CLEAR, lastPath("SetMaskTexture"))
+            assert.is_nil(lastPath("SetBlipTexture"))
+            wheel(-1)
+            assert.equals(CLEAR, lastPath("SetBlipTexture"))
+            Tiles.SetEnabled(false)
+            assert.equals("Interface\\Buttons\\WHITE8X8", lastPath("SetMaskTexture"))
+            assert.equals("OtherAddon\\Blips", lastPath("SetBlipTexture"))
+        end)
+
+        it("does not change textures or strata on world entry when tiles are off", function()
+            Minimap:SetFrameStrata("BACKGROUND")
+            login({ minimapTiles = { enabled = false } })
+            ns.Core.OnEvent(nil, "PLAYER_ENTERING_WORLD")
+            assert.is_nil(lastPath("SetMaskTexture"))
+            assert.is_nil(lastPath("SetBlipTexture"))
+            assert.equals("BACKGROUND", Minimap:GetFrameStrata())
+            assert.is_nil(layer())
+        end)
+
         it("zooms out past zoom 0 and hides the blips at far levels", function()
             login()
             wheel(-1)
@@ -349,6 +419,16 @@ describe("MinimapTiles", function()
             wheel(-1)
             assert.equals(0, Tiles.level)
             assert.same({ -1 }, state.minimapZooms)
+        end)
+
+        it("checks fallback before a wheel notch between position updates", function()
+            login()
+            state.instance = 1
+            wheel(-1)
+            assert.equals(0, Tiles.level)
+            assert.same({ -1 }, state.minimapZooms)
+            assert.same({}, state.sounds)
+            assert.is_false(layer():IsShown())
         end)
 
         it("shows the Blizzard minimap in an instance, indoors and in a WMO city", function()
@@ -476,6 +556,24 @@ describe("MinimapTiles", function()
             state.minimapZoom = 1
             ns.Core.OnEvent(nil, "MINIMAP_UPDATE_ZOOM")
             assert.equals(0, Tiles.level)
+        end)
+
+        it("redraws the scale when the Blizzard zoom event fires", function()
+            login()
+            state.minimapZoom = 5
+            ns.Core.OnEvent(nil, "MINIMAP_UPDATE_ZOOM")
+            near(133.3333 / TILE, across(), 1e-3)
+        end)
+
+        it("checks fallback as soon as the player changes zone", function()
+            login()
+            wheel(-1)
+            state.zone = { name = "Ogrimmar", x = 0.5, y = 0.5 }
+            ns.Core.OnEvent(nil, "ZONE_CHANGED_NEW_AREA")
+            assert.is_false(layer():IsShown())
+            assert.equals(0, Tiles.level)
+            assert.equals("Textures\\MinimapMask", lastPath("SetMaskTexture"))
+            assert.equals("Interface\\Minimap\\ObjectIcons", lastPath("SetBlipTexture"))
         end)
 
         it("leaves far zoom when wheel zoom is turned off", function()

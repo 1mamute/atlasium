@@ -159,6 +159,11 @@ define("SetFrameLevel", function(self, level)
 end)
 define("GetFrameLevel", function(self) return self.frameLevel or 0 end)
 
+define("SetFrameStrata", function(self, strata) self.frameStrata = strata end)
+define("GetFrameStrata", function(self)
+    return self.frameStrata or (self.parent and self.parent:GetFrameStrata()) or "MEDIUM"
+end)
+
 define("EnableMouse", function(self, enabled) self.mouseEnabled = enabled and true or false end)
 define("IsMouseEnabled", function(self) return self.mouseEnabled or false end)
 define("EnableMouseWheel", function(self, enabled) self.wheelEnabled = enabled and true or false end)
@@ -453,7 +458,7 @@ function helper.installWowStubs()
         height = 140,
         GetCenter = function() return 940, 680 end,
         GetZoom = function() return state.minimapZoom end,
-        GetFrameStrata = function() return "LOW" end,
+        frameStrata = "LOW",
     })
     -- The Blizzard + button. Its OnClick script stands for Minimap_ZoomInClick.
     local zoomIn = createNamed("MinimapZoomIn")
