@@ -2,33 +2,46 @@ std = "lua51"
 max_line_length = 120
 exclude_files = { ".luarocks", "lua_modules" }
 
--- Globals the add-on owns (SavedVariables, slash command registration).
+-- Globals the add-on owns (SavedVariables, slash command registration, the debug-only AtlasiumDev).
 globals = {
     "AtlasiumDB",
+    "AtlasiumDev",
     "SLASH_ATLASIUM1",
     "SlashCmdList",
 }
 
 -- WoW 3.3.5a API in use. Add entries as you use more of the API.
 read_globals = {
+    -- Optional error grabber add-on; Log.lua reads its callbacks when it owns the error handler.
+    "BugGrabber",
+    "ChatFontNormal",
     "ClearOverrideBindings",
     "CreateFrame",
     "date",
-    "DEFAULT_CHAT_FRAME",
+    -- The dev console shadows AddMessage during a call to capture the chat output.
+    DEFAULT_CHAT_FRAME = {
+        other_fields = true,
+        fields = {
+            AddMessage = { read_only = false },
+        },
+    },
     "GameTooltip",
     "GetAddOnMetadata",
     "GetBindingFromClick",
+    "GetCurrentKeyBoardFocus",
     "GetCurrentMapAreaID",
     "GetCurrentMapContinent",
     "GetCurrentMapDungeonLevel",
     "GetCursorPosition",
     "GetCVar",
+    "geterrorhandler",
     "GetMapInfo",
     "GetMapOverlayInfo",
     "GetMinimapShape",
     "GetNumMapOverlays",
     "GetPlayerFacing",
     "GetPlayerMapPosition",
+    "GetTime",
     "hooksecurefunc",
     "InCombatLockdown",
     "IsIndoors",
@@ -49,7 +62,9 @@ read_globals = {
     "QUEST_POI_SWAP_BUTTONS",
     "RunBinding",
     "SetMapToCurrentZone",
+    "seterrorhandler",
     "SetOverrideBinding",
+    "SetOverrideBindingClick",
     "ShowWorldMapArrowFrame",
     "ToggleFrame",
     "UIParent",
@@ -85,6 +100,9 @@ read_globals = {
 files["tests/"] = {
     std = "+busted",
     globals = {
+        "AtlasiumDev",
+        "BugGrabber",
+        "ChatFontNormal",
         "ClearOverrideBindings",
         "CreateFrame",
         "date",
@@ -92,17 +110,20 @@ files["tests/"] = {
         "GameTooltip",
         "GetAddOnMetadata",
         "GetBindingFromClick",
+        "GetCurrentKeyBoardFocus",
         "GetCurrentMapAreaID",
         "GetCurrentMapContinent",
         "GetCurrentMapDungeonLevel",
         "GetCursorPosition",
         "GetCVar",
+        "geterrorhandler",
         "GetMapInfo",
         "GetMapOverlayInfo",
         "GetMinimapShape",
         "GetNumMapOverlays",
         "GetPlayerFacing",
         "GetPlayerMapPosition",
+        "GetTime",
         "hooksecurefunc",
         "InCombatLockdown",
         "IsIndoors",
@@ -123,7 +144,9 @@ files["tests/"] = {
         "QUEST_POI_SWAP_BUTTONS",
         "RunBinding",
         "SetMapToCurrentZone",
+        "seterrorhandler",
         "SetOverrideBinding",
+        "SetOverrideBindingClick",
         "ShowWorldMapArrowFrame",
         "ToggleFrame",
         "UIParent",

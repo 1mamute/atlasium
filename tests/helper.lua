@@ -418,7 +418,13 @@ function helper.installWowStubs()
         zone = nil, -- what SetMapToCurrentZone shows: { name, level, x, y }
         mapResets = 0, -- SetMapToCurrentZone calls
         sounds = {}, -- PlaySound names
+        time = 0, -- GetTime(), in seconds
+        focus = nil, -- GetCurrentKeyBoardFocus(): the edit box that has the keyboard
+        errors = {}, -- messages that reached the default error handler
+        errorHandler = nil, -- geterrorhandler(), set below
+        errorHandlerLocked = false, -- seterrorhandler does nothing, as with BugGrabber
     }
+    state.errorHandler = function(msg) table.insert(state.errors, msg) end
 
     for name in pairs(namedFrames) do
         _G[name] = nil
@@ -436,6 +442,20 @@ function helper.installWowStubs()
             local texture = helper.newFake({ name = textureName, layer = layer })
             table.insert(self.textures, texture)
             return texture
+        end
+        if frameType == "EditBox" then
+            -- Text and keyboard focus. The client runs OnEditFocusLost when an edit box loses the focus.
+            frame.text = ""
+            frame.SetText = function(self, text) self.text = text end
+            frame.GetText = function(self) return self.text end
+            frame.SetFocus = function(self) state.focus = self end
+            frame.HasFocus = function(self) return state.focus == self end
+            frame.ClearFocus = function(self)
+                if state.focus == self then
+                    state.focus = nil
+                    helper.runScript(self, "OnEditFocusLost")
+                end
+            end
         end
         table.insert(state.frames, frame)
         return frame
@@ -491,8 +511,23 @@ function helper.installWowStubs()
             state.bindings[key] = nil
         end
     end
+    -- The client stores a click binding as "CLICK <button name>:<mouse button>".
+    _G.SetOverrideBindingClick = function(owner, _, key, buttonName, mouseButton)
+        state.bindingOwner = owner
+        state.bindings[key] = "CLICK " .. buttonName .. ":" .. (mouseButton or "LeftButton")
+    end
     _G.GetBindingFromClick = function(key) return state.binds[key] end
     _G.RunBinding = function(command) table.insert(state.ran, command) end
+    _G.GetTime = function() return state.time end
+    _G.GetCurrentKeyBoardFocus = function() return state.focus end
+    _G.ChatFontNormal = helper.newFake({ name = "ChatFontNormal" })
+    _G.geterrorhandler = function() return state.errorHandler end
+    _G.seterrorhandler = function(fn)
+        if not state.errorHandlerLocked then
+            state.errorHandler = fn
+        end
+    end
+    _G.AtlasiumDev = nil
     -- Blizzard does not define GetMinimapShape in 3.3.5. Specs set it to act as a shape add-on.
     _G.GetMinimapShape = nil
 

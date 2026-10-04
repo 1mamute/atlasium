@@ -6,6 +6,11 @@ These are the rules for Atlasium code. Where luacheck can enforce a rule, it doe
 
 - **No globals.** Use the shared `ns` table. The allowed globals are `AtlasiumDB`,
   `SLASH_ATLASIUM1` and `SlashCmdList["ATLASIUM"]`.
+- **`AtlasiumDev`** is the one exception. In debug mode `Dev.lua` sets `AtlasiumDev = ns`, so `/run`
+  and the dev console can read add-on state (see [In-game testing](in-game-testing.md#inspect-state)).
+  It exists only for in-game checks. Add-on code never reads it, and it is not an API: other add-ons
+  must not use it. A public API for Questie, TomTom or party features is separate work with its own
+  design.
 - **Frame names** create globals too. Give a frame a name only when the client or other add-ons
   need it, and start the name with `Atlasium` (for example `AtlasiumMinimapButton`). For example,
   Escape closes a window only if the window name is in `UISpecialFrames`, minimap button

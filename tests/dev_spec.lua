@@ -55,11 +55,41 @@ describe("Dev", function()
         end)
 
         it("does not use a key twice", function()
-            local seen = {}
+            local seen = { [ns.Dev.CONSOLE_KEY] = true }
             for _, binding in ipairs(ns.Dev.BINDINGS) do
                 assert.is_nil(seen[binding.key])
                 seen[binding.key] = true
             end
+        end)
+    end)
+
+    describe("health report", function()
+        it("lists debug mode, the modules, the load ID and the captured errors", function()
+            load(true)
+            ns.Log = {
+                errorCount = 2,
+                lastError = "Dev.lua:1: boom",
+                GetErrorCapture = function() return "BugGrabber" end,
+            }
+            ns.DevConsole = { GetLoadId = function() return 1234 end }
+            assert.same({
+                debug = true,
+                loadId = 1234,
+                modules = "Core Dev DevConsole Log Util",
+                errorCapture = "BugGrabber",
+                errors = 2,
+                lastError = "Dev.lua:1: boom",
+            }, ns.Dev.GetHealth())
+        end)
+
+        it("works without the dev console and the log", function()
+            load(false)
+            local health = ns.Dev.GetHealth()
+            assert.is_false(health.debug)
+            assert.is_nil(health.loadId)
+            assert.equals("off", health.errorCapture)
+            assert.equals(0, health.errors)
+            assert.equals("Core Dev Util", health.modules)
         end)
     end)
 
@@ -71,6 +101,10 @@ describe("Dev", function()
         it("creates no marker and sets no bindings", function()
             assert.is_nil(findMarker())
             assert.same({}, state.bindings)
+        end)
+
+        it("does not set the AtlasiumDev handle", function()
+            assert.is_nil(_G.AtlasiumDev)
         end)
 
         it("ignores the map hooks", function()
@@ -127,8 +161,16 @@ describe("Dev", function()
             assert.equals(24, findMarker():GetHeight())
         end)
 
+        it("sets the AtlasiumDev handle to the namespace", function()
+            assert.equals(ns, _G.AtlasiumDev)
+        end)
+
         it("sets the override bindings on a frame that is not the marker", function()
-            assert.same({ NUMPADMULTIPLY = "TOGGLEWORLDMAP", NUMPADMINUS = "SCREENSHOT" }, state.bindings)
+            assert.same({
+                NUMPADMULTIPLY = "TOGGLEWORLDMAP",
+                NUMPADMINUS = "SCREENSHOT",
+                NUMPADPLUS = "CLICK AtlasiumDevConsoleButton:LeftButton",
+            }, state.bindings)
             assert.is_not_nil(state.bindingOwner)
             assert.is_not.equals(findMarker(), state.bindingOwner)
         end)
@@ -153,6 +195,23 @@ describe("Dev", function()
     describe("the debug command", function()
         before_each(function()
             load(false)
+        end)
+
+        it("sets and clears the AtlasiumDev handle", function()
+            SlashCmdList.ATLASIUM("debug")
+            assert.equals(ns, _G.AtlasiumDev)
+            SlashCmdList.ATLASIUM("debug")
+            assert.is_nil(_G.AtlasiumDev)
+        end)
+
+        it("switches the dev console and the error capture with debug mode", function()
+            local console, capture = {}, {}
+            ns.DevConsole = { SetActive = function(active) table.insert(console, active) end }
+            ns.Log = { SetErrorCapture = function(active) table.insert(capture, active) end }
+            SlashCmdList.ATLASIUM("debug")
+            SlashCmdList.ATLASIUM("debug")
+            assert.same({ true, false }, console)
+            assert.same({ true, false }, capture)
         end)
 
         it("switches the marker and the bindings with /atlasium debug", function()
@@ -213,6 +272,19 @@ describe("Dev", function()
         it("leaves the command to Blizzard when the client counts the override binding", function()
             state.binds.NUMPADMULTIPLY = "TOGGLEWORLDMAP"
             helper.runScript(WorldMapFrame, "OnKeyDown", "NUMPADMULTIPLY")
+            assert.same({}, state.ran)
+        end)
+
+        it("focuses the dev console with the console key, which the map handler never runs", function()
+            local focused = 0
+            ns.DevConsole = { Focus = function() focused = focused + 1 end, SetActive = function() end }
+            helper.runScript(WorldMapFrame, "OnKeyDown", "NUMPADPLUS")
+            assert.equals(1, focused)
+            assert.same({}, state.ran)
+        end)
+
+        it("ignores the console key without a dev console", function()
+            helper.runScript(WorldMapFrame, "OnKeyDown", "NUMPADPLUS")
             assert.same({}, state.ran)
         end)
 
