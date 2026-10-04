@@ -8,10 +8,12 @@ available commands.
 | Command | What it does |
 | --- | --- |
 | `/atlasium version` | Shows the installed version. |
-| `/atlasium debug` | Turns debug messages on or off. Type it again to switch back. |
+| `/atlasium debug` | Turns debug mode on or off. Type it again to switch back. In debug mode a small green or red square shows in the top-left corner of the screen (green: world map open), and the Num Pad `*` and `-` keys open the map and take a screenshot. These are developer aids. |
 | `/atlasium minimap` | Hides the minimap button. Type it again to show the button. |
 | `/atlasium fog on` | Turns fog clearing on. |
 | `/atlasium fog off` | Turns fog clearing off, so the map shows the normal fog again. |
+| `/atlasium zoom on` | Turns map zoom and drag on. |
+| `/atlasium zoom off` | Turns map zoom and drag off, so the map works as normal. |
 
 ## Minimap button
 
@@ -39,7 +41,21 @@ explored yet are slightly darker.
 
 Use one map add-on at a time. If Mapster's fog clearing is also on, Atlasium darkens every area.
 
+## Map zoom and drag
+
+- **Mouse wheel** over the world map zooms in or out around the cursor, up to 4x.
+- **Drag** with the left mouse button to move the zoomed map. It stops at the map edges.
+- **Click** without dragging works as before, for example to open a zone. Right-click still goes
+  one map level up.
+- Your arrow, party members, quest markers and town icons keep their size while you zoom.
+- The zoom goes back to normal when you close the map or change zone, floor or map size.
+- In combat, zoom and drag still work. The blue quest areas are hidden until the fight ends.
+- Type `/atlasium zoom off` to turn it off, and `/atlasium zoom on` to turn it back on. Atlasium
+  remembers your choice.
+
+Questie's map icons follow the zoom and the drag, but they grow with the zoom for now.
+
 ## Using the map
 
-Map navigation, notes and the integrations are planned. This page will describe them as they
+Notes and the integrations are planned. This page will describe them as they
 are built. See [Features](features.md) for the current status.

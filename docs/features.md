@@ -4,10 +4,10 @@ Atlasium is in early development. This page lists what it will do and what works
 
 | Feature | Status |
 | --- | --- |
-| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap`, `/atlasium fog on`, `/atlasium fog off`) | Available |
+| Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap`, `/atlasium fog on`, `/atlasium fog off`, `/atlasium zoom on`, `/atlasium zoom off`) | Available |
 | Minimap button | Available |
 | Fog clearing | Available |
-| Smooth map navigation (drag and zoom) | Planned |
+| Smooth map navigation (drag and zoom) | Available |
 | Map notes | Planned |
 | TomTom integration | Planned |
 | Questie integration | Planned |
@@ -26,8 +26,9 @@ areas are a little darker, so you can still see where you have not been. See
 
 ## Smooth map navigation
 
-Move around the world map the way you do in an online map: drag to pan and zoom in and out
-with ease, instead of clicking through fixed zone levels.
+Move around the world map the way you do in an online map: turn the mouse wheel to zoom in up
+to 4x around the cursor, and drag with the left mouse button to move the zoomed map. Icons such
+as your arrow and the quest markers keep their size. See [Usage](usage.md#map-zoom-and-drag).
 
 ## Map notes
 

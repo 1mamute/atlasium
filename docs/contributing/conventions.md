@@ -19,10 +19,9 @@ These are the rules for Atlasium code. Where luacheck can enforce a rule, it doe
 - **Saved variables:** merge the defaults on `ADDON_LOADED` with `Util.CopyDefaults`. Never
   overwrite user data, and do not read `AtlasiumDB` before this event.
 - **Events:** register events with `Core.RegisterEvent`. Unregister events you no longer need.
-  `Core.RegisterEvent` keeps one handler for each event, so a second registration of the same
-  event replaces the first. Today each event has one module (`ADDON_LOADED` in `Core.lua`,
-  `PLAYER_LOGIN` in `MinimapButton.lua`). Change `RegisterEvent` to keep a list before a second
-  module uses the same event.
+  `Core.RegisterEvent` keeps a list of handlers for each event. The handlers run in the order of
+  registration, which is the load order of the files (for example `PLAYER_LOGIN` in
+  `MinimapButton.lua`, then in `Dev.lua`).
 - **Performance:** in code that runs often, cache API functions in locals
   (`local GetTime = GetTime`). Never create tables or closures in `OnUpdate`.
 - **Add-on messages** (party sharing): use `SendAddonMessage` with a short, unique prefix (maximum
