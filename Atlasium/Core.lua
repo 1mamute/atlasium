@@ -11,7 +11,9 @@ ns.defaults = {
     },
     minimapZoom = {
         enabled = true, -- the mouse wheel over the minimap changes its zoom level
-        far = true, -- the wheel zooms out past Blizzard's zoom 0 (MinimapFarZoom.lua)
+    },
+    minimapTiles = {
+        enabled = true, -- Atlasium draws the minimap ground, and the wheel zooms past zoom 0 (MinimapTiles.lua)
         farMax = 4, -- largest far zoom, as a factor of the zoom 0 diameter
         farStep = 1.4, -- diameter multiplier per far level
     },
@@ -88,23 +90,23 @@ local SUBMENUS = {
             set = function(enabled) ns.MinimapZoom.SetEnabled(enabled) end,
         },
         {
-            name = "far",
-            get = function() return ns.db.minimapZoom.far end,
-            set = function(enabled) ns.MinimapFarZoom.SetEnabled(enabled) end,
+            name = "tiles",
+            get = function() return ns.db.minimapTiles.enabled end,
+            set = function(enabled) ns.MinimapTiles.SetEnabled(enabled) end,
         },
         {
             name = "farmax",
             kind = "number",
             min = 1.5,
             max = 16,
-            get = function() return ns.db.minimapZoom.farMax end,
-            set = function(factor) ns.MinimapFarZoom.SetMaxFactor(factor) end,
+            get = function() return ns.db.minimapTiles.farMax end,
+            set = function(factor) ns.MinimapTiles.SetMaxFactor(factor) end,
         },
         {
-            name = "faralign",
+            name = "align",
             debugOnly = true,
-            get = function() return ns.MinimapFarZoom.align end,
-            set = function(enabled) ns.MinimapFarZoom.SetAlign(enabled) end,
+            get = function() return ns.MinimapTiles.align end,
+            set = function(enabled) ns.MinimapTiles.SetAlign(enabled) end,
         },
     },
     {

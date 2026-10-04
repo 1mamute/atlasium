@@ -1,9 +1,11 @@
--- Minimap far zoom: past Blizzard's zoom 0, Atlasium draws the minimap terrain tiles itself, on a
--- layer that covers the Blizzard minimap. MinimapZoom.lua sends the wheel here past zoom 0.
+-- Minimap tiles: Atlasium draws the minimap ground (the terrain tiles) on a layer under the Blizzard
+-- minimap, and hides the Blizzard ground with a transparent mask. The client still draws the player
+-- arrow and the blips on top. Past Blizzard's zoom 0 the wheel goes to far levels on the same layer
+-- (MinimapZoom.lua). Instances, indoors and the WMO cities show the Blizzard minimap.
 local _, ns = ...
 
-local FarZoom = {}
-ns.MinimapFarZoom = FarZoom
+local Tiles = {}
+ns.MinimapTiles = Tiles
 
 local floor, sqrt, cos, sin, log = math.floor, math.sqrt, math.cos, math.sin, math.log
 local min, max, sort = math.min, math.max, table.sort
@@ -11,39 +13,47 @@ local min, max, sort = math.min, math.max, table.sort
 -- World yards per minimap tile (mapX_Y): a continent is 64 x 64 tiles around world 0,0.
 local TILE_YARDS = 1600 / 3
 
---- Return the minimap diameter at zoom 0, in yards (Astrolabe and HereBeDragons values).
-function FarZoom.GetBaseDiameter(indoor)
-    return indoor and 300 or 466 + 2 / 3
+-- Outdoor minimap diameter in yards at Blizzard zoom 0 to 5 (Astrolabe and HereBeDragons values).
+local DIAMETERS = { 466 + 2 / 3, 400, 333 + 1 / 3, 266 + 2 / 3, 200, 133 + 1 / 3 }
+
+-- Cities where the client draws its own WMO minimap (md5translate.trs WMO folders), by map file name.
+local WMO_CITIES = { Ogrimmar = true, ThunderBluff = true, Darnassis = true, TheExodar = true, Ironforge = true }
+
+--- Return the minimap diameter in yards at Blizzard `zoom` and far `level` (level 0 is Blizzard's
+-- zoom). Each far level multiplies the zoom 0 diameter by `step`.
+function Tiles.GetDiameter(zoom, level, step)
+    return (DIAMETERS[zoom + 1] or DIAMETERS[1]) * step ^ level
 end
 
 --- Return the number of far levels: each level multiplies the diameter by `step`, up to `maxFactor`.
-function FarZoom.GetLevelCount(maxFactor, step)
+function Tiles.GetLevelCount(maxFactor, step)
     if step <= 1 or maxFactor < step then
         return 0
     end
     return floor(log(maxFactor) / log(step) + 1e-9)
 end
 
---- Return the minimap diameter in yards at far `level` (0 is Blizzard's zoom 0).
-function FarZoom.GetDiameter(level, indoor, step)
-    return FarZoom.GetBaseDiameter(indoor) * step ^ level
+--- Return true when Atlasium draws the ground: not in an instance, not indoors, and not in a WMO city.
+-- `mapName` is the map of the player position (GetMapInfo()).
+function Tiles.CanDraw(mapName, instance, indoor)
+    return not instance and not indoor and mapName ~= nil and not WMO_CITIES[mapName]
 end
 
 --- Return the world position (x grows north, y grows west) of a map position. The bounds come
 -- from WorldMapArea.dbc: left and right are world y, top and bottom are world x.
-function FarZoom.ZoneToWorld(left, right, top, bottom, px, py)
+function Tiles.ZoneToWorld(left, right, top, bottom, px, py)
     return top + (bottom - top) * py, left + (right - left) * px
 end
 
 --- Return the tile position (column grows east, row grows south) of a world position, with the
 -- fraction inside the tile.
-function FarZoom.WorldToTile(wx, wy)
+function Tiles.WorldToTile(wx, wy)
     return 32 - wy / TILE_YARDS, 32 - wx / TILE_YARDS
 end
 
 --- Return the tile folder and the bounds (left, right, top, bottom) of a map and dungeon level, or
 -- nil when the data has no bounds for them.
-function FarZoom.GetBounds(data, mapName, level)
+function Tiles.GetBounds(data, mapName, level)
     local zone = mapName and data.zones[mapName]
     if not zone then
         return nil
@@ -63,22 +73,22 @@ end
 
 --- Return the tile folder, column and row of a player position on a map, or nil. The client
 -- returns 0, 0 when the player is not on the map.
-function FarZoom.GetPlayerTile(data, mapName, level, px, py)
+function Tiles.GetPlayerTile(data, mapName, level, px, py)
     if not px or (px == 0 and py == 0) then
         return nil
     end
-    local folder, left, right, top, bottom = FarZoom.GetBounds(data, mapName, level)
+    local folder, left, right, top, bottom = Tiles.GetBounds(data, mapName, level)
     if not folder then
         return nil
     end
-    local col, row = FarZoom.WorldToTile(FarZoom.ZoneToWorld(left, right, top, bottom, px, py))
+    local col, row = Tiles.WorldToTile(Tiles.ZoneToWorld(left, right, top, bottom, px, py))
     return folder, col, row
 end
 
 --- Return the left and right edge (offsets from the center) of the minimap shape on the row at
 -- offset `y` (down is positive). `r` is the radius. A round quarter follows the circle, a square
 -- quarter goes to the full radius.
-function FarZoom.GetRowExtent(shape, y, r)
+function Tiles.GetRowExtent(shape, y, r)
     local quarters = ns.Util.GetRoundQuarters(shape)
     local half = sqrt(max(r * r - y * y, 0))
     local top = y < 0
@@ -90,7 +100,7 @@ end
 --- Return true when the minimap uses the indoor zoom. The client keeps the outdoor and indoor zoom
 -- in two CVars; when they differ, the current zoom tells which one is in use (HereBeDragons does the
 -- same). When they are equal, `indoors` (IsIndoors()) decides.
-function FarZoom.IsIndoorZoom(outdoorZoom, insideZoom, zoom, indoors)
+function Tiles.IsIndoorZoom(outdoorZoom, insideZoom, zoom, indoors)
     if outdoorZoom ~= insideZoom then
         return zoom == insideZoom
     end
@@ -120,7 +130,7 @@ end
 -- angle (map rotation in radians, counterclockwise).
 -- Each horizontal strip is split where its center line crosses a tile edge. Each piece shows its
 -- slice of one tile, rotated through the 8 argument SetTexCoord.
-function FarZoom.BuildSegments(params, emit)
+function Tiles.BuildSegments(params, emit)
     local r = params.size / 2
     local k = params.size / params.across -- units per tile
     local c, s = cos(params.angle), sin(params.angle)
@@ -130,7 +140,7 @@ function FarZoom.BuildSegments(params, emit)
     while y0 < r do
         local y1 = min(y0 + params.strip, r)
         local ym = (y0 + y1) / 2
-        local xa, xb = FarZoom.GetRowExtent(params.shape, ym, r)
+        local xa, xb = Tiles.GetRowExtent(params.shape, ym, r)
         if xb > xa then
             for i = #cuts, 1, -1 do
                 cuts[i] = nil
@@ -164,49 +174,60 @@ function FarZoom.BuildSegments(params, emit)
     return count
 end
 
---- Return the 8 SetTexCoord values that turn a square texture `angle` radians counterclockwise.
-function FarZoom.GetArrowTexCoords(angle)
-    local c, s = cos(angle), sin(angle)
-    local h = 0.5
-    return h + c * -h - s * -h, h + s * -h + c * -h, -- upper left
-        h + c * -h - s * h, h + s * -h + c * h, -- lower left
-        h + c * h - s * -h, h + s * h + c * -h, -- upper right
-        h + c * h - s * h, h + s * h + c * h -- lower right
-end
-
 -- Renderer: thin WoW glue around the pure functions above.
 
 local STRIP, PAD = 2, 0.35 -- strip height and overlap in minimap units (no gaps in the spike)
 local UPDATE_INTERVAL = 1 / 30 -- seconds between position checks
 local RETRY_INTERVAL = 1 -- seconds between SetMapToCurrentZone calls while the position is missing
 local WATER_R, WATER_G, WATER_B = 0.1, 0.2, 0.4 -- open sea (no tile)
--- The client draws the minimap tiles darker than the texture files (measured in Durotar at zoom 0).
-local SHADE_R, SHADE_G, SHADE_B = 0.6, 0.62, 0.7
--- The Blizzard arrow, measured at zoom 0: its size, and the offset of its centre from the minimap
--- centre (x right, y up). The offset stays the same when the arrow turns.
-local ARROW_SIZE, ARROW_X, ARROW_Y = 29, 1.8, 1.7
+local CLEAR = "Interface\\WORLDMAP\\Silithus\\pixelfix1" -- a fully transparent client texture
 
-FarZoom.level = 0
-FarZoom.align = false
+Tiles.level = 0
+Tiles.align = false
 
--- Blizzard frames on the minimap edge that must stay above the layer, with their level over the minimap.
--- The border goes above the layer, and the buttons that sit on the border go above the border.
-local RAISED = {
-    { "MinimapBackdrop", 5 },
-    { "MiniMapMailFrame", 6 },
-    { "MiniMapBattlefieldFrame", 6 },
-    { "GameTimeFrame", 6 },
-    { "TimeManagerClockButton", 6 }, -- load-on-demand, so it can be missing
+-- Minimap textures that Atlasium replaces with CLEAR: the mask hides the Blizzard ground, and the blip
+-- texture hides the blips at far levels (the client places them at the zoom 0 scale). `saved` is the
+-- texture that Blizzard or another add-on set last, which comes back when Atlasium is done.
+local swaps = {
+    mask = { method = "SetMaskTexture", saved = "Textures\\MinimapMask", clear = false },
+    blips = { method = "SetBlipTexture", saved = "Interface\\Minimap\\ObjectIcons", clear = false },
 }
+local swapping = false
 
-local frame, arrow
-local savedLevels = {}
+local driver, layer
 local pool, paths, used, shown = {}, {}, 0, 0
 local pathCache = {}
-local folder, col, row -- last good player position
+local folder, col, row, mapName -- last good player position
+local drawing = false
 local last = {} -- view of the last draw
 local params = { strip = STRIP, pad = PAD }
 local sinceUpdate, sinceRetry = 0, RETRY_INTERVAL
+
+local function CallSwap(swap, path)
+    swapping = true
+    Minimap[swap.method](Minimap, path)
+    swapping = false
+end
+
+local function SetClear(swap, clear)
+    if swap.clear ~= clear then
+        swap.clear = clear
+        CallSwap(swap, clear and CLEAR or swap.saved)
+    end
+end
+
+-- Remember the texture another add-on sets. While Atlasium has CLEAR set, put CLEAR back.
+for _, swap in pairs(swaps) do
+    hooksecurefunc(Minimap, swap.method, function(_, path)
+        if swapping then
+            return
+        end
+        swap.saved = path
+        if swap.clear then
+            CallSwap(swap, CLEAR)
+        end
+    end)
+end
 
 local function GetTilePath(tx, ty)
     if tx < 0 or tx > 63 or ty < 0 or ty > 63 then
@@ -231,22 +252,20 @@ local function PlaceTile(tx, ty, left, top, width, height, ...)
     used = used + 1
     local texture = pool[used]
     if not texture then
-        texture = frame:CreateTexture(nil, "ARTWORK")
+        texture = layer:CreateTexture(nil, "ARTWORK")
         pool[used] = texture
     end
     local path = GetTilePath(tx, ty)
     if paths[used] ~= path then
         if path then
             texture:SetTexture(path)
-            texture:SetVertexColor(SHADE_R, SHADE_G, SHADE_B)
         else
             texture:SetTexture(WATER_R, WATER_G, WATER_B)
-            texture:SetVertexColor(1, 1, 1)
         end
         paths[used] = path
     end
     texture:ClearAllPoints()
-    texture:SetPoint("TOPLEFT", frame, "TOPLEFT", left, -top)
+    texture:SetPoint("TOPLEFT", layer, "TOPLEFT", left, -top)
     texture:SetWidth(width)
     texture:SetHeight(height)
     texture:SetTexCoord(...)
@@ -255,7 +274,7 @@ end
 
 local function Draw()
     used = 0
-    FarZoom.BuildSegments(params, PlaceTile)
+    Tiles.BuildSegments(params, PlaceTile)
     for i = used + 1, shown do
         pool[i]:Hide()
     end
@@ -264,10 +283,11 @@ end
 
 -- Read the player tile position from the current world map. Returns true on success.
 local function ReadPosition()
+    local name = GetMapInfo()
     local px, py = GetPlayerMapPosition("player")
-    local f, c, r = FarZoom.GetPlayerTile(ns.MinimapTileData, GetMapInfo(), GetCurrentMapDungeonLevel(), px, py)
+    local f, c, r = Tiles.GetPlayerTile(ns.MinimapTileData, name, GetCurrentMapDungeonLevel(), px, py)
     if f then
-        folder, col, row = f, c, r
+        folder, col, row, mapName = f, c, r, name
         return true
     end
     return false
@@ -290,40 +310,69 @@ local function UpdatePosition(elapsed)
 end
 
 local function IsIndoor()
-    return FarZoom.IsIndoorZoom(tonumber(GetCVar("minimapZoom")), tonumber(GetCVar("minimapInsideZoom")),
+    return Tiles.IsIndoorZoom(tonumber(GetCVar("minimapZoom")), tonumber(GetCVar("minimapInsideZoom")),
         Minimap:GetZoom(), IsIndoors())
 end
 
--- Redraw when the view changed. Leave far zoom in an instance or without a position.
+local function CreateLayer()
+    -- Under the Blizzard minimap, so the client draws the arrow and the blips over the tiles. The
+    -- mouse goes to the minimap.
+    layer = CreateFrame("Frame", nil, MinimapCluster)
+    layer:SetAllPoints(Minimap)
+    layer:SetFrameStrata(Minimap:GetFrameStrata())
+    layer:Hide()
+end
+
+-- Show the Blizzard minimap: restore the mask and the blips, hide the tiles and leave far zoom.
+local function StopDrawing()
+    drawing = false
+    Tiles.level = 0
+    SetClear(swaps.mask, false)
+    SetClear(swaps.blips, false)
+    if layer then
+        layer:Hide()
+    end
+end
+
+-- Show the tiles under a transparent mask. The alignment check shows them at half alpha over the
+-- Blizzard minimap instead.
+local function StartDrawing()
+    if not layer then
+        CreateLayer()
+    end
+    local level = Minimap:GetFrameLevel()
+    layer:SetFrameLevel(Tiles.align and level + 1 or max(level - 1, 0))
+    layer:SetAlpha(Tiles.align and 0.5 or 1)
+    SetClear(swaps.mask, not Tiles.align)
+    SetClear(swaps.blips, Tiles.level > 0)
+    if not drawing then
+        drawing = true
+        wipe(last)
+        layer:Show()
+    end
+end
+
+-- Draw the tiles when the player is where Atlasium can draw, else show the Blizzard minimap.
+-- Redraw only when the view changed.
 local function Update(elapsed)
-    if IsInInstance() or not UpdatePosition(elapsed) then
-        FarZoom.Leave()
+    -- Check the instance first: there the position is missing, and the retry would reset the map.
+    local instance = IsInInstance()
+    if instance or not UpdatePosition(elapsed) or not Tiles.CanDraw(mapName, instance, IsIndoor()) then
+        StopDrawing()
         return
     end
-    local indoor = IsIndoor()
-    local diameter
-    if FarZoom.level > 0 then
-        diameter = FarZoom.GetDiameter(FarZoom.level, indoor, ns.db.minimapZoom.farStep)
-    else
-        diameter = FarZoom.GetBaseDiameter(indoor) -- alignment check at zoom 0
-    end
-    local facing = GetPlayerFacing() or 0
+    StartDrawing()
     local rotate = GetCVar("rotateMinimap") == "1"
     params.size = Minimap:GetWidth()
     params.shape = GetMinimapShape and GetMinimapShape() or "ROUND"
-    params.across = diameter / TILE_YARDS
-    params.angle = rotate and -facing or 0
+    params.across = Tiles.GetDiameter(Minimap:GetZoom(), Tiles.level, ns.db.minimapTiles.farStep) / TILE_YARDS
+    params.angle = rotate and -(GetPlayerFacing() or 0) or 0
     params.col, params.row = col, row
     if last.size ~= params.size or last.shape ~= params.shape or last.across ~= params.across
         or last.angle ~= params.angle or last.col ~= col or last.row ~= row or last.folder ~= folder then
         last.size, last.shape, last.across, last.angle = params.size, params.shape, params.across, params.angle
         last.col, last.row, last.folder = col, row, folder
         Draw()
-    end
-    local arrowAngle = rotate and 0 or facing
-    if last.arrowAngle ~= arrowAngle then
-        last.arrowAngle = arrowAngle
-        arrow:SetTexCoord(FarZoom.GetArrowTexCoords(arrowAngle))
     end
 end
 
@@ -335,148 +384,95 @@ local function OnUpdate(_, elapsed)
     end
 end
 
-local function OnMouseWheel(_, delta)
-    ns.MinimapZoom.OnMouseWheel(Minimap, delta)
-end
-
-local function CreateLayer()
-    frame = CreateFrame("Frame", nil, Minimap)
-    frame:SetAllPoints(Minimap)
-    frame:SetScript("OnMouseWheel", OnMouseWheel)
-    frame:Hide()
-    arrow = frame:CreateTexture(nil, "OVERLAY")
-    arrow:SetTexture("Interface\\Minimap\\MinimapArrow")
-    arrow:SetWidth(ARROW_SIZE)
-    arrow:SetHeight(ARROW_SIZE)
-    arrow:SetPoint("CENTER", frame, "CENTER", ARROW_X, ARROW_Y)
-end
-
-local function IsActive()
-    return frame ~= nil and frame:IsShown()
-end
-
--- Show the layer over the Blizzard minimap. The Blizzard map stays shown (hiding it hides the
--- border and the pins of other add-ons); the frames in RAISED go above the layer.
-local function Activate()
-    if not frame then
-        CreateLayer()
-    end
-    if not IsActive() then
-        wipe(savedLevels)
-        for _, entry in ipairs(RAISED) do
-            local raised = _G[entry[1]]
-            if raised then
-                savedLevels[raised] = raised:GetFrameLevel()
-                raised:SetFrameLevel(Minimap:GetFrameLevel() + entry[2])
-            end
-        end
-        folder = nil
-        sinceRetry = RETRY_INTERVAL
-    end
-    frame:SetFrameLevel(Minimap:GetFrameLevel() + 1)
-    -- The alignment check shows the tiles and the arrow at half alpha over the Blizzard map and lets
-    -- the mouse through.
-    frame:SetAlpha(FarZoom.align and 0.5 or 1)
-    frame:EnableMouse(not FarZoom.align)
-    frame:EnableMouseWheel(not FarZoom.align)
-    wipe(last)
-    frame:Show()
-    frame:SetScript("OnUpdate", OnUpdate)
-    Update(0)
-end
-
-local function Deactivate()
-    if not IsActive() then
-        return
-    end
-    frame:SetScript("OnUpdate", nil)
-    frame:Hide()
-    for raised, level in pairs(savedLevels) do
-        raised:SetFrameLevel(level)
-    end
-    wipe(savedLevels)
-end
-
+-- Start or stop the position checks, and draw at once.
 local function Refresh()
-    if FarZoom.level > 0 or FarZoom.align then
-        Activate()
+    if not driver then
+        driver = CreateFrame("Frame")
+    end
+    if ns.db.minimapTiles.enabled then
+        driver:SetScript("OnUpdate", OnUpdate)
+        sinceRetry = RETRY_INTERVAL
+        Update(0)
     else
-        Deactivate()
+        driver:SetScript("OnUpdate", nil)
+        Tiles.align = false
+        StopDrawing()
     end
 end
 
 --- Return the number of far levels the settings allow.
-function FarZoom.GetMaxLevel()
-    local settings = ns.db.minimapZoom
-    return FarZoom.GetLevelCount(settings.farMax, settings.farStep)
+function Tiles.GetMaxLevel()
+    local settings = ns.db.minimapTiles
+    return Tiles.GetLevelCount(settings.farMax, settings.farStep)
 end
 
---- Set the far level (0 shows the Blizzard minimap). This ends the alignment check.
-function FarZoom.SetLevel(level)
-    FarZoom.align = false
-    FarZoom.level = max(0, min(level, FarZoom.GetMaxLevel()))
+--- Set the far level (0 is Blizzard's zoom). This ends the alignment check.
+function Tiles.SetLevel(level)
+    Tiles.align = false
+    Tiles.level = max(0, min(level, Tiles.GetMaxLevel()))
     Refresh()
 end
 
---- Leave far zoom and the alignment check, and show the Blizzard minimap.
-function FarZoom.Leave()
-    FarZoom.level = 0
-    FarZoom.align = false
-    Refresh()
+--- Leave far zoom and the alignment check.
+function Tiles.Leave()
+    Tiles.SetLevel(0)
 end
 
---- Return true when the wheel can zoom out past the current level: far zoom is on, the Blizzard
--- minimap is at zoom 0, the player is not in an instance, and the data has the player's position.
-function FarZoom.CanZoomOut()
-    if not ns.db.minimapZoom.far or Minimap:GetZoom() ~= 0 or FarZoom.level >= FarZoom.GetMaxLevel()
-        or IsInInstance() then
+--- Return true when the wheel can zoom out past the current level: the tiles are on and drawn, and
+-- the Blizzard minimap is at zoom 0.
+function Tiles.CanZoomOut()
+    if not ns.db.minimapTiles.enabled or Minimap:GetZoom() ~= 0 or Tiles.level >= Tiles.GetMaxLevel() then
         return false
     end
-    if FarZoom.level > 0 then
-        return true
+    if not drawing then
+        sinceRetry = RETRY_INTERVAL
+        Update(0)
     end
-    sinceRetry = RETRY_INTERVAL
-    folder = nil
-    return UpdatePosition(0)
+    return drawing
 end
 
 --- Zoom out one far level.
-function FarZoom.ZoomOut()
+function Tiles.ZoomOut()
     PlaySound("igMiniMapZoomOut")
-    FarZoom.SetLevel(FarZoom.level + 1)
+    Tiles.SetLevel(Tiles.level + 1)
 end
 
---- Zoom in one far level. At level 0 the Blizzard minimap shows again.
-function FarZoom.ZoomIn()
+--- Zoom in one far level. At level 0 the Blizzard zoom takes over again.
+function Tiles.ZoomIn()
     PlaySound("igMiniMapZoomIn")
-    FarZoom.SetLevel(FarZoom.level - 1)
+    Tiles.SetLevel(Tiles.level - 1)
 end
 
---- Save the `far` setting. Turning it off leaves far zoom.
-function FarZoom.SetEnabled(enabled)
-    ns.db.minimapZoom.far = enabled
-    if not enabled then
-        FarZoom.Leave()
-    end
-end
-
---- Save the largest zoom factor past zoom 0, and step back when the current level is now too far.
-function FarZoom.SetMaxFactor(factor)
-    ns.db.minimapZoom.farMax = factor
-    if FarZoom.level > FarZoom.GetMaxLevel() then
-        FarZoom.SetLevel(FarZoom.GetMaxLevel())
-    end
-end
-
---- Turn the alignment check on or off: the tiles at the zoom 0 diameter, at half alpha over the
--- Blizzard minimap. Debug mode only.
-function FarZoom.SetAlign(enabled)
-    FarZoom.level = 0
-    FarZoom.align = enabled
+--- Save the `enabled` setting. Off shows the Blizzard minimap as it is without Atlasium.
+function Tiles.SetEnabled(enabled)
+    ns.db.minimapTiles.enabled = enabled
+    Tiles.level = 0
+    Tiles.align = false
     Refresh()
 end
 
--- The Blizzard + button zooms the covered minimap. While far zoom is active, it steps back one far
+--- Save the largest zoom factor past zoom 0, and step back when the current level is now too far.
+function Tiles.SetMaxFactor(factor)
+    ns.db.minimapTiles.farMax = factor
+    if Tiles.level > Tiles.GetMaxLevel() then
+        Tiles.SetLevel(Tiles.GetMaxLevel())
+    end
+end
+
+--- Turn the alignment check on or off: the tiles at half alpha over the Blizzard minimap, at the
+-- current Blizzard zoom. Debug mode only.
+function Tiles.SetAlign(enabled)
+    Tiles.level = 0
+    Tiles.align = enabled
+    Refresh()
+end
+
+--- Return true when Atlasium draws the tiles now.
+function Tiles.IsDrawing()
+    return drawing
+end
+
+-- The Blizzard + button zooms the Blizzard minimap. While far zoom is active, it steps back one far
 -- level instead.
 local function WrapZoomInButton()
     if not MinimapZoomIn then
@@ -484,20 +480,32 @@ local function WrapZoomInButton()
     end
     local blizzardOnClick = MinimapZoomIn:GetScript("OnClick")
     MinimapZoomIn:SetScript("OnClick", function(...)
-        if FarZoom.level > 0 then
-            FarZoom.ZoomIn()
+        if Tiles.level > 0 then
+            Tiles.ZoomIn()
         elseif blizzardOnClick then
             blizzardOnClick(...)
         end
     end)
 end
 
-ns.Core.RegisterEvent("PLAYER_LOGIN", WrapZoomInButton)
+ns.Core.RegisterEvent("PLAYER_LOGIN", function()
+    WrapZoomInButton()
+    if ns.db.minimapTiles.enabled then
+        Refresh()
+    end
+end)
 
--- Another add-on or the client changed the Blizzard zoom: leave far zoom and the alignment check,
--- which need zoom 0.
+-- Another add-on or the client changed the Blizzard zoom: far levels need zoom 0.
 ns.Core.RegisterEvent("MINIMAP_UPDATE_ZOOM", function()
-    if (FarZoom.level > 0 or FarZoom.align) and Minimap:GetZoom() ~= 0 then
-        FarZoom.Leave()
+    if Tiles.level > 0 and Minimap:GetZoom() ~= 0 then
+        Tiles.Leave()
+    end
+end)
+
+-- The client keeps the current map when the player walks into another zone with the world map
+-- closed. Set it to the new zone, so the WMO city check sees the city.
+ns.Core.RegisterEvent("ZONE_CHANGED_NEW_AREA", function()
+    if ns.db.minimapTiles.enabled and not WorldMapFrame:IsShown() then
+        SetMapToCurrentZone()
     end
 end)

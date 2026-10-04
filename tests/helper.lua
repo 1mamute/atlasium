@@ -442,18 +442,19 @@ function helper.installWowStubs()
     _G.AtlasiumDB = nil
     _G.SLASH_ATLASIUM1 = nil
 
-    -- Default minimap: a fake frame, 140 x 140 at the top-right of a 1024 x 768 screen.
+    -- Default minimap: a fake frame, 140 x 140 at the top-right of a 1024 x 768 screen, in
+    -- MinimapCluster. SetMaskTexture and SetBlipTexture are recorded.
+    local cluster = createNamed("MinimapCluster", { frameLevel = 1 })
     _G.Minimap = helper.newFrame({
         name = "Minimap",
+        parent = cluster,
+        frameLevel = 2,
         width = 140,
         height = 140,
         GetCenter = function() return 940, 680 end,
         GetZoom = function() return state.minimapZoom end,
+        GetFrameStrata = function() return "LOW" end,
     })
-    -- The minimap border. The client draws it above the minimap.
-    createNamed("MinimapBackdrop", { frameLevel = 3 })
-    -- The calendar button on the minimap edge. The clock (TimeManagerClockButton) loads on demand.
-    createNamed("GameTimeFrame", { frameLevel = 4 })
     -- The Blizzard + button. Its OnClick script stands for Minimap_ZoomInClick.
     local zoomIn = createNamed("MinimapZoomIn")
     zoomIn:SetScript("OnClick", function() state.zoomInClicks = state.zoomInClicks + 1 end)
