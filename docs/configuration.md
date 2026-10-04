@@ -5,10 +5,10 @@
 | Setting | Default | How to change |
 | --- | --- | --- |
 | Debug mode | Off | Type `/atlasium debug` to switch on or off. It shows a small green or red square in the top-left corner and binds two Num Pad keys (developer aids). |
-| Minimap button | Shown | Type `/atlasium minimap` to hide or show it. |
+| Minimap button | Shown | Type `/atlasium minimap button off` or `/atlasium minimap button on`. |
 | Minimap button position | Bottom-left edge of the minimap | Drag the button around the minimap. |
-| Fog clearing | On | Type `/atlasium fog off` or `/atlasium fog on`. |
-| Map zoom and drag | On | Type `/atlasium zoom off` or `/atlasium zoom on`. |
+| Fog clearing | On | Type `/atlasium worldmap fog off` or `/atlasium worldmap fog on`. |
+| Map zoom and drag | On | Type `/atlasium worldmap zoom off` or `/atlasium worldmap zoom on`. |
 | Largest zoom | 4 | Edit `mapNav.maxZoom` in the saved variables file while the game is closed. |
 | Zoom per wheel notch | 1.25 | Edit `mapNav.step` in the saved variables file while the game is closed. |
 | Unexplored area tint | Gray (`r`, `g`, `b` 0.6, `a` 1) | Edit `fogClear.color` in the saved variables file while the game is closed. |

@@ -631,7 +631,7 @@ function MapNavigation.SetEnabled(enabled)
     end
 end
 
---- Return the current zoom factor (1 is no zoom).
+--- Return the current zoom level (1 is no zoom).
 function MapNavigation.GetZoom()
     return state.zoom
 end

@@ -9,11 +9,16 @@ available commands.
 | --- | --- |
 | `/atlasium version` | Shows the installed version. |
 | `/atlasium debug` | Turns debug mode on or off. Type it again to switch back. In debug mode a small green or red square shows in the top-left corner of the screen (green: world map open), and the Num Pad `*` and `-` keys open the map and take a screenshot. These are developer aids. |
-| `/atlasium minimap` | Hides the minimap button. Type it again to show the button. |
-| `/atlasium fog on` | Turns fog clearing on. |
-| `/atlasium fog off` | Turns fog clearing off, so the map shows the normal fog again. |
-| `/atlasium zoom on` | Turns map zoom and drag on. |
-| `/atlasium zoom off` | Turns map zoom and drag off, so the map works as normal. |
+| `/atlasium minimap` | Shows the minimap settings and whether each one is on or off. |
+| `/atlasium minimap button on` | Shows the minimap button. |
+| `/atlasium minimap button off` | Hides the minimap button. |
+| `/atlasium worldmap` | Shows the world map settings and whether each one is on or off. |
+| `/atlasium worldmap zoom on` | Turns map zoom and drag on. |
+| `/atlasium worldmap zoom off` | Turns map zoom and drag off, so the map works as normal. |
+| `/atlasium worldmap fog on` | Turns fog clearing on. |
+| `/atlasium worldmap fog off` | Turns fog clearing off, so the map shows the normal fog again. |
+
+Leave out `on` or `off` to see whether a setting is on, for example `/atlasium worldmap fog`.
 
 ## Minimap button
 
@@ -24,6 +29,8 @@ is a placeholder until Atlasium gets its own icon.
 - **Drag** the button with the left mouse button to move it around the edge of the minimap. It
   remembers its spot after a reload or logout.
 - **Point at it** to see a tooltip with the version and these actions.
+- Type `/atlasium minimap button off` to hide it, and `/atlasium minimap button on` to bring it
+  back.
 
 If an add-on such as SexyMap gives your minimap a square shape, the button follows the square
 edge.
@@ -35,8 +42,9 @@ map shows the whole zone. Areas you have explored look the same as before, and a
 explored yet are slightly darker.
 
 - Fog clearing works on zone maps. Continent, city and dungeon maps do not change.
-- Type `/atlasium fog off` to bring the fog back, and `/atlasium fog on` to clear it again. If
-  the map is open, it changes at once. `/atlasium fog` on its own shows whether it is on or off.
+- Type `/atlasium worldmap fog off` to bring the fog back, and `/atlasium worldmap fog on` to
+  clear it again. If the map is open, it changes at once. `/atlasium worldmap fog` on its own
+  shows whether it is on or off.
 - Atlasium remembers your choice after a reload or logout.
 
 Use one map add-on at a time. If Mapster's fog clearing is also on, Atlasium darkens every area.
@@ -50,8 +58,8 @@ Use one map add-on at a time. If Mapster's fog clearing is also on, Atlasium dar
 - Your arrow, party members, quest markers and town icons keep their size while you zoom.
 - The zoom goes back to normal when you close the map or change zone, floor or map size.
 - In combat, zoom and drag still work. The blue quest areas are hidden until the fight ends.
-- Type `/atlasium zoom off` to turn it off, and `/atlasium zoom on` to turn it back on. Atlasium
-  remembers your choice.
+- Type `/atlasium worldmap zoom off` to turn it off, and `/atlasium worldmap zoom on` to turn it
+  back on. Atlasium remembers your choice.
 
 Questie's map icons follow the zoom and the drag, but they grow with the zoom for now.
 
