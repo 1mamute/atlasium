@@ -147,6 +147,12 @@ function FogClear.SetEnabled(enabled)
     end
 end
 
+--- Save an independent tint table and refresh unexplored areas on the open map.
+function FogClear.SetColor(color)
+    ns.db.fogClear.color = { r = color.r, g = color.g, b = color.b, a = color.a }
+    if WorldMapFrame:IsShown() then FogClear.Update() end
+end
+
 -- WorldMapFrame_Update is in FrameXML, which loads before add-ons. hooksecurefunc runs our function
 -- after Blizzard's and does not replace it, so it causes no taint.
 hooksecurefunc("WorldMapFrame_Update", FogClear.Update)

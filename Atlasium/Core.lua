@@ -3,6 +3,7 @@ local ADDON_NAME, ns = ...
 ns.name = ADDON_NAME
 
 ns.defaults = {
+    language = "enUS", -- Atlasium text only; the client language stays unchanged
     debug = false,
     log = {}, -- error and debug messages, newest last (see Log.lua)
     minimap = {
@@ -68,7 +69,7 @@ Core.RegisterEvent("ADDON_LOADED", function(name)
 end)
 
 local function OnOff(enabled)
-    return enabled and "on" or "off"
+    return ns.Localization.Get(enabled and "on" or "off")
 end
 
 -- The submenus of the slash command, in help order. Each subcommand has a `get` that returns its
@@ -80,17 +81,17 @@ local SUBMENUS = {
         {
             name = "button",
             get = function() return not ns.db.minimap.hide end,
-            set = function(enabled) ns.MinimapButton.SetShown(enabled) end,
+            set = function(enabled) ns.Settings.Set("button", enabled) end,
         },
         {
             name = "zoom",
             get = function() return ns.db.minimapZoom.enabled end,
-            set = function(enabled) ns.MinimapZoom.SetEnabled(enabled) end,
+            set = function(enabled) ns.Settings.Set("minimapZoom", enabled) end,
         },
         {
             name = "tiles",
             get = function() return ns.db.minimapTiles.enabled end,
-            set = function(enabled) ns.MinimapTiles.SetEnabled(enabled) end,
+            set = function(enabled) ns.Settings.Set("tiles", enabled) end,
         },
         {
             name = "align",
@@ -104,12 +105,12 @@ local SUBMENUS = {
         {
             name = "zoom",
             get = function() return ns.db.mapNav.enabled end,
-            set = function(enabled) ns.MapNavigation.SetEnabled(enabled) end,
+            set = function(enabled) ns.Settings.Set("mapNav", enabled) end,
         },
         {
             name = "fog",
             get = function() return ns.db.fogClear.enabled end,
-            set = function(enabled) ns.FogClear.SetEnabled(enabled) end,
+            set = function(enabled) ns.Settings.Set("fog", enabled) end,
         },
     },
 }
@@ -139,7 +140,7 @@ end
 
 --- Return the help line, for example "commands: /atlasium debug | version | minimap button on/off".
 function Core.GetHelp()
-    local parts = { "debug", "version" }
+    local parts = { "settings", "help", "debug", "version" }
     for _, submenu in ipairs(SUBMENUS) do
         for _, sub in ipairs(submenu) do
             if IsAvailable(sub) then
@@ -147,7 +148,7 @@ function Core.GetHelp()
             end
         end
     end
-    return "commands: /atlasium " .. table.concat(parts, " | ")
+    return ns.Localization.Get("commands", table.concat(parts, " | "))
 end
 
 -- `/atlasium <submenu>` lists the subcommands and their state. `/atlasium <submenu> <sub> on | off`
@@ -161,7 +162,7 @@ local function HandleSubmenu(submenu, rest)
                 table.insert(states, sub.name .. " " .. FormatState(sub))
             end
         end
-        Print(submenu.name .. ": " .. table.concat(states, ", "))
+        Print(ns.Localization.Get("submenu", submenu.name, table.concat(states, ", ")))
         return
     end
     local sub = FindByName(submenu, subName)
@@ -174,20 +175,21 @@ local function HandleSubmenu(submenu, rest)
         sub.set(arg == "on")
     end
     local command = submenu.name .. " " .. sub.name
-    Print(command .. " " .. FormatState(sub) .. " (/atlasium " .. command .. " " .. FormatValues(" | ") .. ")")
+    Print(ns.Localization.Get("state", command, FormatState(sub), command, FormatValues(" | ")))
 end
 
 function Core.HandleSlash(msg)
     local cmd, rest = ns.Util.SplitCommand(msg)
     local submenu = FindByName(SUBMENUS, cmd)
-    if submenu then
+    if cmd == "" or cmd == "settings" then
+        ns.SettingsUI.Show()
+    elseif submenu then
         HandleSubmenu(submenu, rest)
     elseif cmd == "debug" then
-        ns.db.debug = not ns.db.debug
-        ns.Dev.Update()
-        Print("debug " .. OnOff(ns.db.debug))
+        ns.Settings.Set("debug", not ns.db.debug)
+        Print(ns.Localization.Get("debugState", OnOff(ns.db.debug)))
     elseif cmd == "version" then
-        Print("v" .. (GetAddOnMetadata(ADDON_NAME, "Version") or "?"))
+        Print(ns.Localization.Get("version", GetAddOnMetadata(ADDON_NAME, "Version") or "?"))
     else
         Print(Core.GetHelp())
     end

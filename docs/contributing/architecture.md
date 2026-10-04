@@ -8,6 +8,7 @@ This page shows how the Atlasium code is organized.
 Atlasium/          the add-on; put this folder in Interface/AddOns
   Atlasium.toc     manifest (Interface 30300, saved variable AtlasiumDB)
   Util.lua         pure helper functions that do not call the WoW API
+  Localization.lua  English and Brazilian Portuguese strings and live language selection
   Core.lua         event handling, saved-variable setup, the /atlasium command
   Log.lua          error and debug messages, in chat and in the saved log
   MinimapButton.lua  the minimap button and its position math
@@ -19,6 +20,8 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   MapNavigation.lua  zoom and drag on the world map
   Dev.lua          debug-mode aids for in-game checks: the map marker, fixed keys, AtlasiumDev
   DevConsole.lua   debug-mode dev console: runs Lua from tools/wow-dev.ps1, shows the result
+  Settings.lua     shared validation and feature setters for configuration edits
+  SettingsUI.lua   shared controls in the native window and Interface Options panel
 tests/             busted specs and WoW stubs (not part of the add-on)
 tools/             developer scripts, for example the generator of Data/MinimapTileData.lua
 docs/              documentation
@@ -50,6 +53,23 @@ before `FogClear.lua`, because `FogClear.lua` reads `ns.Overlays`. `Data/Minimap
 Code that needs saved settings or other add-ons waits for an event. For example, the minimap
 button is built on `PLAYER_LOGIN`: at that time `AtlasiumDB` is ready, and add-ons that define
 `GetMinimapShape` have loaded.
+
+## Settings and localization
+
+`Localization.lua` loads before `Core.lua`. It resolves text at use time from `ns.db.language`.
+English is the default and fallback. Keep command keywords and developer logs in English.
+
+`Settings.lua` loads after the feature modules. Its `Get`, `Set` and `ResetDefaults` functions
+share configuration behavior between slash commands and UI controls. Invalid edits leave state
+unchanged. New numeric limits apply to edits; loading existing preferences does not rewrite them.
+
+`SettingsUI.lua` registers one Interface Options panel on `PLAYER_LOGIN`. It creates the standalone
+dialog on first use. Both views use the same content builder. Refresh suppresses control callbacks,
+so showing a view cannot apply changes. The views apply edits immediately and keep them on close.
+Defaults use feature setters and preserve the saved log.
+
+The minimap button resolves `ns.SettingsUI` when clicked, after all manifest files load. Its drag
+handler refreshes the position sliders. Language edits refresh both views and visible tooltips.
 
 ## Hooks on Blizzard code
 

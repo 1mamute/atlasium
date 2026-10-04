@@ -7,6 +7,7 @@ describe("Core", function()
         state = helper.installWowStubs()
         ns = helper.newNamespace()
         helper.loadAddonFile("Atlasium/Util.lua", ns)
+        helper.loadAddonFile("Atlasium/Localization.lua", ns)
         helper.loadAddonFile("Atlasium/Core.lua", ns)
         helper.loadAddonFile("Atlasium/Log.lua", ns)
         helper.loadAddonFile("Atlasium/Data/MinimapTileData.lua", ns)
@@ -14,6 +15,8 @@ describe("Core", function()
         helper.loadAddonFile("Atlasium/MinimapZoom.lua", ns)
         helper.loadAddonFile("Atlasium/MapNavigation.lua", ns)
         helper.loadAddonFile("Atlasium/Dev.lua", ns)
+        helper.loadAddonFile("Atlasium/Settings.lua", ns)
+        helper.loadAddonFile("Atlasium/SettingsUI.lua", ns)
     end)
 
     it("registers ADDON_LOADED and wires the event script", function()
@@ -157,7 +160,7 @@ describe("Core", function()
             SlashCmdList.ATLASIUM("nonsense")
             SlashCmdList.ATLASIUM("zoom off")
             SlashCmdList.ATLASIUM("fog off")
-            SlashCmdList.ATLASIUM("")
+            SlashCmdList.ATLASIUM("help")
             assert.matches("commands:", state.messages[1])
             for i = 2, 4 do
                 assert.equals(state.messages[1], state.messages[i])
@@ -168,7 +171,7 @@ describe("Core", function()
 
         it("lists every subcommand in the help line", function()
             assert.equals(
-                "commands: /atlasium debug | version | minimap button on/off | minimap zoom on/off"
+                "commands: /atlasium settings | help | debug | version | minimap button on/off | minimap zoom on/off"
                     .. " | minimap tiles on/off"
                     .. " | worldmap zoom on/off | worldmap fog on/off",
                 ns.Core.GetHelp()

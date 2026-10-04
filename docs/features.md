@@ -6,6 +6,8 @@ Atlasium is in early development. This page lists what it will do and what works
 | --- | --- |
 | Slash commands (`/atlasium version`, `/atlasium debug`, `/atlasium minimap button on` or `off`, `/atlasium minimap zoom on` or `off`, `/atlasium minimap tiles on` or `off`, `/atlasium worldmap zoom on` or `off`, `/atlasium worldmap fog on` or `off`) | Available |
 | Minimap button | Available |
+| Native settings window and Interface Options panel | Available |
+| English and Brazilian Portuguese, selectable in settings | Available |
 | Minimap wheel zoom | Available |
 | Minimap tiles | Available (experimental) |
 | Fog clearing | Available |
@@ -17,7 +19,7 @@ Atlasium is in early development. This page lists what it will do and what works
 
 ## Minimap button
 
-A round button on the edge of the minimap. Click it to open or close the world map, and drag it
+A round button on the edge of the minimap. Click it to open or close settings, and drag it
 to any spot around the minimap. See [Usage](usage.md#minimap-button).
 
 ## Minimap wheel zoom

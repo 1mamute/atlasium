@@ -2,11 +2,13 @@
 
 ## Slash commands
 
-Type these in the chat box. `/atlasium` with no command, or with an unknown one, lists the
-available commands.
+Type these in the chat box. `/atlasium` opens settings. `/atlasium help`, or an unknown command,
+lists the available commands. Command keywords stay the same in both languages.
 
 | Command | What it does |
 | --- | --- |
+| `/atlasium` or `/atlasium settings` | Opens the settings window, even when the minimap button is hidden. |
+| `/atlasium help` | Lists the available commands. |
 | `/atlasium version` | Shows the installed version. |
 | `/atlasium debug` | Turns debug mode on or off. Type it again to switch back. In debug mode a small green or red square shows in the top-left corner of the screen (green: world map open), and the Num Pad `*` and `-` keys open the map and take a screenshot. These are developer aids. |
 | `/atlasium minimap` | Shows the minimap settings and whether each one is on or off. |
@@ -27,10 +29,9 @@ Leave out `on` or `off` to see whether a setting is on, for example `/atlasium w
 
 ## Minimap button
 
-Atlasium puts a round button with a question mark on the edge of your minimap. The question mark
-is a placeholder until Atlasium gets its own icon.
+Atlasium puts a round button with a parchment-map icon on the edge of your minimap.
 
-- **Left-click** opens or closes the world map, like the M key.
+- **Left-click** opens or closes Atlasium settings. The M key still opens the world map.
 - **Drag** the button with the left mouse button to move it around the edge of the minimap. It
   remembers its spot after a reload or logout.
 - **Point at it** to see a tooltip with the version and these actions.

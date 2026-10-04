@@ -66,6 +66,36 @@ The chat box takes at most 255 characters, so `wow-dev.ps1 run` is good only for
 result comes back on a screenshot. `wow-dev.ps1 eval` has no length limit and prints the result as
 text. Use `eval` when debug mode is on.
 
+## Settings UI checks
+
+The settings feature adds manifest entries. Restart the client before this first check.
+
+Checked in the 3.3.5a client on 2026-10-04: both settings views, English and Brazilian Portuguese
+text, scroll bounds, feature callbacks, view synchronization, color preview and cancellation,
+defaults, Interface Options cancellation, zoom limits during animation, wheel increments and
+preferences after reload. The native special-window close path also passes. The session reports
+zero captured Lua errors. Original preferences are restored after the checks.
+
+Physical title-bar dragging, the Escape key, different UI scales and changes during real combat
+still need field checks. The callback checks do not replace these checks.
+
+1. Click the minimap button. Confirm that Atlasium settings opens and the world map stays closed.
+2. Drag the title bar. Confirm that the window stays on screen. Close it with Escape.
+3. Open Interface → AddOns → Atlasium. Confirm that both views show the same controls.
+4. Switch to Português (Brasil). Check accents, text wrapping, tooltips and scrolling at small UI scales.
+5. Toggle each feature. Confirm that changes apply immediately. Hide the minimap button, then open
+   settings with `/atlasium`. Confirm that cancelling Interface Options keeps applied changes.
+6. Drag the minimap button. Confirm that both position sliders update.
+7. Zoom the world map. Lower its maximum zoom during animation. Confirm that zoom and scroll stay
+   within the new limits. Change the wheel multiplier and check the next notch.
+8. Change unexplored-area color and opacity with the map open. Cancel the picker and check the
+   previous tint. Repeat and accept the new tint.
+9. Open settings in combat. Change map settings and debug mode. Check for blocked actions and Lua
+   errors. Confirm that debug bindings update after combat.
+10. Reload after setting Portuguese and changing a feature. Confirm that both preferences persist.
+11. Restore defaults from each view. Confirm that English and feature defaults return. Keep the
+    saved log. Mark these checks complete only after observing them in the client.
+
 ## What needs a restart
 
 The client reads `.toc` files only at startup. `/reload` reads the Lua and XML files again.

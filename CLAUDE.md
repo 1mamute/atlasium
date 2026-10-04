@@ -33,6 +33,13 @@ CI (`.github/workflows/ci.yml`) runs both.
 
 ## Code layout rules
 
+- **UI design:** Make the UI as close to a vanilla window as possible, so the add-on feels like
+  a built-in feature of the original client. Use the original 3.3.5a client's visual conventions.
+  See `docs/contributing/conventions.md` (UI design).
+- `Localization.lua` owns English and Brazilian Portuguese text. `Settings.lua` validates user
+  edits and calls feature setters. `SettingsUI.lua` builds the shared controls in a standalone
+  native dialog and an Interface Options panel. Changes apply immediately in both views.
+
 - Every file starts with `local ADDON_NAME, ns = ...` and attaches to `ns`; no new globals beyond `AtlasiumDB`, the slash command, frame names that start with `Atlasium` (only when the client or other add-ons need the name, for example `UISpecialFrames`) and the debug handle `AtlasiumDev` (debug mode only, set by `Dev.lua`).
 - New files go in `Atlasium/Atlasium.toc` in dependency order, with a matching `tests/*_spec.lua`.
 - Keep logic pure (like `Util.lua`) and WoW-API glue thin so it can be tested with the stubs in `tests/helper.lua`.

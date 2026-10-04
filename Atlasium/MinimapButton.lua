@@ -11,9 +11,7 @@ local sqrt, max, min = math.sqrt, math.max, math.min
 local EDGE_OFFSET = 10
 
 local TOOLTIP_LINES = {
-    "|cffa6a6a6Left-click|r: Open or close the world map",
-    "|cffa6a6a6Drag|r: Move this button",
-    "|cffa6a6a6/atlasium minimap button off|r: Hide this button",
+    "buttonClick", "buttonDrag", "buttonHide",
 }
 
 --- Return the x, y offset of the button center from the minimap center.
@@ -58,12 +56,20 @@ end
 
 local icon
 local isMoving = false
+local tooltipShown = false
 
 --- Move the button to the saved angle on the minimap edge.
 function MinimapButton.UpdatePosition()
     local shape = GetMinimapShape and GetMinimapShape()
     local x, y = MinimapButton.GetOffset(ns.db.minimap.angle, Minimap:GetWidth(), Minimap:GetHeight(), shape)
     MinimapButton.frame:SetPoint("CENTER", Minimap, "CENTER", x, y)
+    if ns.SettingsUI then ns.SettingsUI.Refresh() end
+end
+
+--- Save the button angle and move the button immediately.
+function MinimapButton.SetAngle(angle)
+    ns.db.minimap.angle = angle
+    MinimapButton.UpdatePosition()
 end
 
 local function UpdateVisibility()
@@ -80,10 +86,10 @@ function MinimapButton.SetShown(shown)
     UpdateVisibility()
 end
 
---- Handle a click. Left-click opens or closes the world map, like the M key.
+--- Handle a click. Left-click opens or closes Atlasium settings.
 function MinimapButton.OnClick(_, mouseButton)
     if mouseButton == "LeftButton" then
-        ToggleFrame(WorldMapFrame)
+        ns.SettingsUI.Toggle()
     end
 end
 
@@ -108,6 +114,7 @@ local function OnDragStart(self)
     self:LockHighlight()
     PressIcon()
     isMoving = true
+    tooltipShown = false
     GameTooltip:Hide()
     self:SetScript("OnUpdate", OnUpdate)
 end
@@ -123,19 +130,27 @@ local function OnEnter(self)
     if isMoving then
         return
     end
+    tooltipShown = true
     GameTooltip:SetOwner(self, "ANCHOR_NONE")
+    GameTooltip:ClearLines()
     local x, y = self:GetCenter()
     local point, relativePoint = MinimapButton.GetTooltipAnchor(x, y, UIParent:GetWidth(), UIParent:GetHeight())
     GameTooltip:SetPoint(point, self, relativePoint)
     GameTooltip:AddLine(ADDON_NAME .. " " .. (GetAddOnMetadata(ADDON_NAME, "Version") or "?"), 1, 1, 1)
     for _, line in ipairs(TOOLTIP_LINES) do
-        GameTooltip:AddLine(line)
+        GameTooltip:AddLine(ns.Localization.Get(line))
     end
     GameTooltip:Show()
 end
 
 local function OnLeave()
+    tooltipShown = false
     GameTooltip:Hide()
+end
+
+--- Refresh an open minimap tooltip after a language change.
+function MinimapButton.RefreshTooltip()
+    if tooltipShown and GameTooltip:GetOwner() == MinimapButton.frame then OnEnter(MinimapButton.frame) end
 end
 
 --- Build the button. Runs one time, on PLAYER_LOGIN.
@@ -160,7 +175,7 @@ function MinimapButton.Create()
     icon = button:CreateTexture(nil, "BACKGROUND")
     icon:SetWidth(20)
     icon:SetHeight(20)
-    icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
     icon:SetPoint("TOPLEFT", 7, -5)
     ReleaseIcon()
 

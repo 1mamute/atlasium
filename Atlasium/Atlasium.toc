@@ -6,6 +6,7 @@
 ## SavedVariables: AtlasiumDB
 
 Util.lua
+Localization.lua
 Core.lua
 Log.lua
 MinimapButton.lua
@@ -17,3 +18,5 @@ FogClear.lua
 MapNavigation.lua
 Dev.lua
 DevConsole.lua
+Settings.lua
+SettingsUI.lua
