@@ -10,3 +10,5 @@ Core.lua
 MinimapButton.lua
 Data\Overlays.lua
 FogClear.lua
+MapNavigation.lua
+Dev.lua

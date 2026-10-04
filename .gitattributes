@@ -1,0 +1,10 @@
+# Store and check out text files with LF, whatever core.autocrlf says.
+* text=auto eol=lf
+
+# Windows-only tooling keeps CRLF.
+*.ps1 text eol=crlf
+
+*.png binary
+*.jpg binary
+*.tga binary
+*.blp binary

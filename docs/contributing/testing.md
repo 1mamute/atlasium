@@ -17,10 +17,12 @@ These are the stubs:
 | --- | --- |
 | `CreateFrame(type, name, parent)` | Returns a fake frame (see below). A named frame also becomes a global, as in the client. |
 | `Minimap` | 140 × 140, center at (940, 680), effective scale 1. |
-| `UIParent` | A 1024 × 768 screen. |
+| `UIParent` | A 1024 × 768 screen. The effective scale is `state.uiScale` (default 1). |
 | `GameTooltip`, `WorldMapFrame` | Fake widgets that record all calls. |
 | `GetCursorPosition()` | Returns `state.cursor.x` and `state.cursor.y`. |
 | `ToggleFrame(frame)` | Adds the frame to `state.toggled`. |
+| `SetOverrideBinding(owner, priority, key, command)`, `ClearOverrideBindings(owner)` | Write and clear `state.bindings` (key to command). `state.bindingOwner` is the last owner. |
+| `GetBindingFromClick(key)`, `RunBinding(command)` | The first returns `state.binds[key]`. The second adds the command to `state.ran`. |
 | `GetMinimapShape` | `nil`, as in the 3.3.5 client. Set it in a spec to act as a shape add-on such as SexyMap. |
 | `GetMapInfo()`, `GetNumMapOverlays()`, `GetMapOverlayInfo(i)` | Read `state.map`: `name` is the map name, and `overlays` is a list of the texture paths of the explored overlays. |
 | `WorldMapDetailFrame` | A fake frame. `CreateTexture` returns a fake texture with real `Show`, `Hide` and `IsShown`, and adds it to `WorldMapDetailFrame.textures`. |
