@@ -73,35 +73,68 @@ describe("Core", function()
             assert.matches("v0%.1%.0", state.messages[1])
         end)
 
-        it("turns map zoom off and on, and prints the new state", function()
+        it("turns world map zoom off and on, and prints the new state", function()
             local calls = {}
             local setEnabled = ns.MapNavigation.SetEnabled
             ns.MapNavigation.SetEnabled = function(enabled)
                 table.insert(calls, enabled)
                 setEnabled(enabled)
             end
-            SlashCmdList.ATLASIUM("zoom off")
+            SlashCmdList.ATLASIUM("worldmap zoom off")
             assert.is_false(ns.db.mapNav.enabled)
-            assert.matches("map zoom off", state.messages[1])
-            SlashCmdList.ATLASIUM("zoom on")
+            assert.matches("worldmap zoom off", state.messages[1])
+            SlashCmdList.ATLASIUM("WorldMap Zoom On")
             assert.is_true(ns.db.mapNav.enabled)
-            assert.matches("map zoom on", state.messages[2])
+            assert.matches("worldmap zoom on", state.messages[2])
             assert.same({ false, true }, calls)
         end)
 
-        it("prints the map zoom state without a valid argument", function()
+        it("prints the zoom state without on or off", function()
             local called = false
             ns.MapNavigation.SetEnabled = function() called = true end
-            SlashCmdList.ATLASIUM("zoom")
-            SlashCmdList.ATLASIUM("zoom maybe")
+            SlashCmdList.ATLASIUM("worldmap zoom")
+            SlashCmdList.ATLASIUM("worldmap zoom maybe")
             assert.is_false(called)
-            assert.matches("map zoom on %(/atlasium zoom on | off%)", state.messages[1])
+            assert.matches("worldmap zoom on %(/atlasium worldmap zoom on | off%)", state.messages[1])
             assert.equals(state.messages[1], state.messages[2])
         end)
 
-        it("prints help for unknown input", function()
-            SlashCmdList.ATLASIUM("nonsense")
+        it("lists the subcommands and their state for a bare submenu", function()
+            ns.db.fogClear.enabled = false
+            SlashCmdList.ATLASIUM("worldmap")
+            ns.db.minimap.hide = true
+            SlashCmdList.ATLASIUM("minimap")
+            assert.matches("worldmap: zoom on, fog off$", state.messages[1])
+            assert.matches("minimap: button off$", state.messages[2])
+        end)
+
+        it("prints help for an unknown subcommand", function()
+            SlashCmdList.ATLASIUM("worldmap nonsense on")
+            SlashCmdList.ATLASIUM("minimap fog off")
             assert.matches("commands:", state.messages[1])
+            assert.equals(state.messages[1], state.messages[2])
+            assert.is_true(ns.db.fogClear.enabled)
+        end)
+
+        it("prints help for unknown input and for the old commands", function()
+            SlashCmdList.ATLASIUM("nonsense")
+            SlashCmdList.ATLASIUM("zoom off")
+            SlashCmdList.ATLASIUM("fog off")
+            SlashCmdList.ATLASIUM("")
+            assert.matches("commands:", state.messages[1])
+            for i = 2, 4 do
+                assert.equals(state.messages[1], state.messages[i])
+            end
+            assert.is_true(ns.db.mapNav.enabled)
+            assert.is_true(ns.db.fogClear.enabled)
+        end)
+
+        it("lists every subcommand in the help line", function()
+            assert.equals(
+                "commands: /atlasium debug | version | minimap button on/off | worldmap zoom on/off"
+                    .. " | worldmap fog on/off",
+                ns.Core.GetHelp()
+            )
         end)
     end)
 end)

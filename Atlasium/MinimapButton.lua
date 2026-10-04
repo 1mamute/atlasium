@@ -33,7 +33,7 @@ local EDGE_OFFSET = 10
 local TOOLTIP_LINES = {
     "|cffa6a6a6Left-click|r: Open or close the world map",
     "|cffa6a6a6Drag|r: Move this button",
-    "|cffa6a6a6/atlasium minimap|r: Hide this button",
+    "|cffa6a6a6/atlasium minimap button off|r: Hide this button",
 }
 
 --- Return the x, y offset of the button center from the minimap center.
@@ -95,9 +95,9 @@ local function UpdateVisibility()
     end
 end
 
---- Switch the saved `hide` setting, then show or hide the button.
-function MinimapButton.Toggle()
-    ns.db.minimap.hide = not ns.db.minimap.hide
+--- Save the `hide` setting, then show or hide the button.
+function MinimapButton.SetShown(shown)
+    ns.db.minimap.hide = not shown
     UpdateVisibility()
 end
 
