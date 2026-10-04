@@ -50,4 +50,38 @@ describe("Util", function()
             assert.equals("", (Util.SplitCommand(nil)))
         end)
     end)
+
+    describe("JoinArgs", function()
+        it("joins the arguments with spaces through tostring", function()
+            assert.equals("a 1 true", Util.JoinArgs("a", 1, true))
+        end)
+
+        it("keeps a nil in the middle and at the end", function()
+            assert.equals("a nil b nil", Util.JoinArgs("a", nil, "b", nil))
+        end)
+
+        it("returns an empty string without arguments", function()
+            assert.equals("", Util.JoinArgs())
+        end)
+    end)
+
+    describe("AppendCapped", function()
+        it("appends under the cap", function()
+            local list = { "a" }
+            Util.AppendCapped(list, "b", 3)
+            assert.same({ "a", "b" }, list)
+        end)
+
+        it("fills up to the cap", function()
+            local list = { "a", "b" }
+            Util.AppendCapped(list, "c", 3)
+            assert.same({ "a", "b", "c" }, list)
+        end)
+
+        it("drops the oldest entries over the cap", function()
+            local list = { "a", "b", "c", "d" }
+            Util.AppendCapped(list, "e", 3)
+            assert.same({ "c", "d", "e" }, list)
+        end)
+    end)
 end)

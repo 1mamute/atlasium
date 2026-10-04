@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**. The repo has a minimal scaffold: the add-on in `Atlasium/` (`Util.lua`, `Core.lua`, `MinimapButton.lua`, `MinimapZoom.lua`, `Data/Overlays.lua`, `FogClear.lua`, `MapNavigation.lua`, `Dev.lua`), busted specs in `tests/`, and developer docs in `docs/`. Available features: the minimap button, minimap wheel zoom, fog clearing and zoom and drag on the world map.
+Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**. The repo has a minimal scaffold: the add-on in `Atlasium/` (`Util.lua`, `Core.lua`, `Log.lua`, `MinimapButton.lua`, `MinimapZoom.lua`, `Data/Overlays.lua`, `FogClear.lua`, `MapNavigation.lua`, `Dev.lua`), busted specs in `tests/`, and developer docs in `docs/`. Available features: the minimap button, minimap wheel zoom, fog clearing and zoom and drag on the world map.
 
 ## Commands
 
@@ -21,6 +21,7 @@ CI (`.github/workflows/ci.yml`) runs both.
 - The client calls each `.toc` file with `(addonName, ns)` varargs; `ns` is the only shared state. `Core.lua` owns the event frame (`Core.RegisterEvent`), SavedVariables init (`ns.defaults` merged into `AtlasiumDB` via `ns.Util.CopyDefaults` on `ADDON_LOADED`) and the `/atlasium` slash handler.
 - `FogClear.lua` hooks `WorldMapFrame_Update` with `hooksecurefunc` and draws the unexplored overlays on its own `BORDER` textures under `WorldMapDetailFrame`. Its data is `Data/Overlays.lua` (`ns.Overlays`), generated from the 3.3.5a DBC files: do not edit it by hand. The tile math (`GetTiles`) matches Blizzard's loop in `FrameXML/WorldMapFrame.lua`.
 - `MapNavigation.lua` moves the Blizzard map frames into a clipping `ScrollFrame` (viewport) > scroll child > scaled zoom frame on the first map open. Icons are counter-scaled (`1/zoom`, offsets times `zoom`; `ResolveRaw` keeps raw Blizzard values). The selected quest blob is cleared and drawn again after each zoom or scroll. In combat the blob leaves the tree (it can be protected); on return `WorldMapButton` and `WorldMapPOIFrame` rejoin after it, because a ScrollFrame draws children in join order, not by frame level.
+- `Log.lua` has `Log.Error(...)` (always) and `Log.Debug(...)` (only in debug mode). Both print to chat and append a timed string to `AtlasiumDB.log`, capped at 200 entries (`Util.AppendCapped`). Use `Core.Print` only for replies to the player.
 - `MinimapButton.lua` builds the button on `PLAYER_LOGIN` (registered with `Core.RegisterEvent`, which keeps a list of handlers per event). Its position and tooltip math are pure functions (`GetOffset`, `AngleFromCursor`, `GetTooltipAnchor`).
 - `MinimapZoom.lua` sets the minimap `OnMouseWheel` script on `PLAYER_LOGIN` and calls Blizzard's `Minimap_ZoomIn` and `Minimap_ZoomOut` (they click the + and - buttons). It skips a wheel handler of another add-on, and `zoom off` removes only its own handler.
 - Specs load files with `helper.loadAddonFile(path, ns)`, which mimics the client's varargs, after `helper.installWowStubs()` mocks the WoW globals. The `CreateFrame` stub returns fake frames that record any method call (`helper.lastCall`). A new WoW API needs a stub in `installWowStubs()` as well as entries in `read_globals` and the `tests/` globals.

@@ -33,6 +33,15 @@ and closes the world map, so you (or Claude Code) can check a change without lea
 5. Optional: install BugGrabber and BugSack (3.3.5 builds). Errors go to
    `WTF\Account\<ACCOUNT>\SavedVariables\!BugGrabber.lua`, which can be read after a reload.
 
+## Atlasium log
+
+Atlasium writes its error and debug messages to chat and to a saved log. Debug messages need debug
+mode. To read the log after a session:
+
+1. Type `/reload`, or log out. The client writes saved variables only on reload, logout or exit.
+2. Open `WTF\Account\<ACCOUNT>\SavedVariables\Atlasium.lua`.
+3. Find the `log` table. It holds the newest 200 entries, oldest first.
+
 ## What needs a restart
 
 The client reads `.toc` files only at startup. `/reload` reads the Lua and XML files again.

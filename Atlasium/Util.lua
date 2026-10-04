@@ -31,3 +31,21 @@ function Util.SplitCommand(msg)
     local cmd, rest = (msg or ""):match("^%s*(%S*)%s*(.-)%s*$")
     return cmd:lower(), rest
 end
+
+--- Join the arguments with spaces, like `print`. Each argument goes through `tostring`, so nil and
+-- numbers are safe, and a nil in the middle still counts.
+function Util.JoinArgs(...)
+    local parts = {}
+    for i = 1, select("#", ...) do
+        parts[i] = tostring((select(i, ...)))
+    end
+    return table.concat(parts, " ")
+end
+
+--- Append `entry` to `list`, then drop the oldest entries until `list` holds at most `max`.
+function Util.AppendCapped(list, entry, max)
+    table.insert(list, entry)
+    while #list > max do
+        table.remove(list, 1)
+    end
+end

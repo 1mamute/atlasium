@@ -9,6 +9,7 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Atlasium.toc     manifest (Interface 30300, saved variable AtlasiumDB)
   Util.lua         pure helper functions that do not call the WoW API
   Core.lua         event handling, saved-variable setup, the /atlasium command
+  Log.lua          error and debug messages, in chat and in the saved log
   MinimapButton.lua  the minimap button and its position math
   MinimapZoom.lua  mouse wheel zoom on the minimap
   Data/Overlays.lua  the world map overlays of all zones (generated, do not edit)
@@ -36,7 +37,8 @@ globals are the saved variable `AtlasiumDB`, the slash command and frame names t
 
 The game loads files in `.toc` order. A file can use only the modules listed above it. `Util.lua`
 is first because `Core.lua` uses it. `MinimapButton.lua` comes after `Core.lua`, because it
-registers `PLAYER_LOGIN` with `Core.RegisterEvent` when it loads. `Data/Overlays.lua` comes
+registers `PLAYER_LOGIN` with `Core.RegisterEvent` when it loads. `Log.lua` comes right after
+`Core.lua`, so every feature file can write to the log. `Data/Overlays.lua` comes
 before `FogClear.lua`, because `FogClear.lua` reads `ns.Overlays`.
 
 Code that needs saved settings or other add-ons waits for an event. For example, the minimap
@@ -91,6 +93,22 @@ The main parts:
 
 The zoom goes back to 1x when the map closes or the map, floor or layout changes. At 1x the map
 looks the same as without Atlasium.
+
+## Log
+
+`Log.lua` writes error and debug messages. `Log.Error(...)` and `Log.Debug(...)` join their
+arguments with spaces, like `print`. Each message goes to chat with an `[ERROR]` or `[DEBUG]` tag.
+It also goes to `AtlasiumDB.log` as one string with the time, for example
+`"2026-10-04 12:34:56 [ERROR] msg"`.
+
+- Errors are always written.
+- Debug messages are written only while debug mode is on (`/atlasium debug`).
+- The log keeps the newest 200 entries (`Log.MAX_ENTRIES`). A new entry over the cap drops the
+  oldest one.
+- Before `ADDON_LOADED` the saved variables do not exist. Then an error goes only to chat, and a
+  debug message is dropped.
+
+The log does not catch Lua errors. Those still go to the Blizzard error handler.
 
 ## Keep code testable
 

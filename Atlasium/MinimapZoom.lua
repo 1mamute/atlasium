@@ -30,9 +30,7 @@ end
 local function Install()
     local current = Minimap:GetScript("OnMouseWheel")
     if current and current ~= MinimapZoom.OnMouseWheel then
-        if ns.db.debug then
-            ns.Core.Print("minimap wheel already used by another add-on; Atlasium minimap wheel zoom skipped")
-        end
+        ns.Log.Debug("minimap wheel already used by another add-on; Atlasium minimap wheel zoom skipped")
         return
     end
     Minimap:EnableMouseWheel(true)

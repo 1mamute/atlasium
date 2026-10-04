@@ -4,6 +4,7 @@ ns.name = ADDON_NAME
 
 ns.defaults = {
     debug = false,
+    log = {}, -- error and debug messages, newest last (see Log.lua)
     minimap = {
         hide = false, -- true hides the button
         angle = 225, -- position on the minimap edge, in degrees (0 is right, 90 is top)
