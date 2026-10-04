@@ -22,6 +22,9 @@ These are the rules for Atlasium code. Where luacheck can enforce a rule, it doe
   `Core.RegisterEvent` keeps a list of handlers for each event. The handlers run in the order of
   registration, which is the load order of the files (for example `PLAYER_LOGIN` in
   `MinimapButton.lua`, then in `Dev.lua`).
+- **Messages:** use `Log.Error` when code finds a problem, and `Log.Debug` for details that help
+  a contributor. Use `Core.Print` only for replies to the player, for example slash command
+  output. Do not check `ns.db.debug` before `Log.Debug`: the function does it.
 - **Performance:** in code that runs often, cache API functions in locals
   (`local GetTime = GetTime`). Never create tables or closures in `OnUpdate`.
 - **Add-on messages** (party sharing): use `SendAddonMessage` with a short, unique prefix (maximum

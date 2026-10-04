@@ -4,6 +4,9 @@
 
 local helper = {}
 
+-- The time that the `date` stub returns.
+helper.DATE = "2026-10-04 12:34:56"
+
 function helper.newNamespace()
     return {}
 end
@@ -416,6 +419,8 @@ function helper.installWowStubs()
         return frame
     end
     _G.GetAddOnMetadata = function() return "0.1.0" end
+    -- The client exposes os.date as `date`. The stub returns a fixed time.
+    _G.date = function() return helper.DATE end
     _G.SlashCmdList = {}
     _G.AtlasiumDB = nil
     _G.SLASH_ATLASIUM1 = nil

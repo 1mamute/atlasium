@@ -13,6 +13,7 @@ globals = {
 read_globals = {
     "ClearOverrideBindings",
     "CreateFrame",
+    "date",
     "DEFAULT_CHAT_FRAME",
     "GameTooltip",
     "GetAddOnMetadata",
@@ -78,6 +79,7 @@ files["tests/"] = {
     globals = {
         "ClearOverrideBindings",
         "CreateFrame",
+        "date",
         "DEFAULT_CHAT_FRAME",
         "GameTooltip",
         "GetAddOnMetadata",
