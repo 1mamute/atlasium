@@ -7,6 +7,7 @@
 | Debug mode | Off | Type `/atlasium debug` to switch on or off. It shows a small green or red square in the top-left corner and binds two Num Pad keys (developer aids). |
 | Minimap button | Shown | Type `/atlasium minimap button off` or `/atlasium minimap button on`. |
 | Minimap button position | Bottom-left edge of the minimap | Drag the button around the minimap. |
+| Minimap wheel zoom | On | Type `/atlasium minimap zoom off` or `/atlasium minimap zoom on`. |
 | Fog clearing | On | Type `/atlasium worldmap fog off` or `/atlasium worldmap fog on`. |
 | Map zoom and drag | On | Type `/atlasium worldmap zoom off` or `/atlasium worldmap zoom on`. |
 | Largest zoom | 4 | Edit `mapNav.maxZoom` in the saved variables file while the game is closed. |

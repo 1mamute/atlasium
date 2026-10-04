@@ -392,6 +392,7 @@ function helper.installWowStubs()
         player = { x = 0, y = 0 }, -- GetPlayerMapPosition("player")
         arrowPositions = {}, -- argument lists of PositionWorldMapArrowFrame
         arrowShows = {}, -- argument lists of ShowWorldMapArrowFrame
+        minimapZooms = {}, -- 1 for each Minimap_ZoomIn call, -1 for each Minimap_ZoomOut call
     }
 
     for name in pairs(namedFrames) do
@@ -419,13 +420,17 @@ function helper.installWowStubs()
     _G.AtlasiumDB = nil
     _G.SLASH_ATLASIUM1 = nil
 
-    -- Default minimap: 140 x 140 at the top-right of a 1024 x 768 screen.
-    _G.Minimap = helper.newFake({
-        GetWidth = function() return 140 end,
-        GetHeight = function() return 140 end,
+    -- Default minimap: a fake frame, 140 x 140 at the top-right of a 1024 x 768 screen.
+    _G.Minimap = helper.newFrame({
+        name = "Minimap",
+        width = 140,
+        height = 140,
         GetCenter = function() return 940, 680 end,
-        GetEffectiveScale = function() return 1 end,
     })
+    -- Blizzard's Minimap_ZoomIn and Minimap_ZoomOut click the + and - buttons. The stubs add
+    -- 1 or -1 to `state.minimapZooms`.
+    _G.Minimap_ZoomIn = function() table.insert(state.minimapZooms, 1) end
+    _G.Minimap_ZoomOut = function() table.insert(state.minimapZooms, -1) end
     _G.UIParent = helper.newFake({
         GetWidth = function() return 1024 end,
         GetHeight = function() return 768 end,

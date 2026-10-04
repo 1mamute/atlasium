@@ -10,6 +10,7 @@ Atlasium/          the add-on; put this folder in Interface/AddOns
   Util.lua         pure helper functions that do not call the WoW API
   Core.lua         event handling, saved-variable setup, the /atlasium command
   MinimapButton.lua  the minimap button and its position math
+  MinimapZoom.lua  mouse wheel zoom on the minimap
   Data/Overlays.lua  the world map overlays of all zones (generated, do not edit)
   FogClear.lua     fog clearing on the world map, and its tile math
   MapNavigation.lua  zoom and drag on the world map
@@ -60,9 +61,11 @@ file by hand. `tests/overlays_spec.lua` checks its shape.
 
 ## Map navigation
 
-`MapNavigation.lua` builds its frames the first time the map opens. It moves the Blizzard map frames`n(`WorldMapDetailFrame`, `WorldMapBlobFrame`, `WorldMapButton` and `WorldMapPOIFrame`) into this tree:
+`MapNavigation.lua` builds its frames the first time the map opens. It moves the Blizzard map frames
+(`WorldMapDetailFrame`, `WorldMapBlobFrame`, `WorldMapButton` and `WorldMapPOIFrame`) into this tree:
 
-```n WorldMapFrame
+```
+WorldMapFrame
    viewport     ScrollFrame where the map was; it clips the map
      scrollChild  scrolled by the drag
        zoomFrame  scaled by the zoom; holds the Blizzard map frames

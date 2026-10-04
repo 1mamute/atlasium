@@ -8,6 +8,9 @@ ns.defaults = {
         hide = false, -- true hides the button
         angle = 225, -- position on the minimap edge, in degrees (0 is right, 90 is top)
     },
+    minimapZoom = {
+        enabled = true, -- the mouse wheel over the minimap changes its zoom level
+    },
     fogClear = {
         enabled = true,
         color = { r = 0.6, g = 0.6, b = 0.6, a = 1 }, -- tint of unexplored areas
@@ -73,6 +76,11 @@ local SUBMENUS = {
             name = "button",
             get = function() return not ns.db.minimap.hide end,
             set = function(enabled) ns.MinimapButton.SetShown(enabled) end,
+        },
+        {
+            name = "zoom",
+            get = function() return ns.db.minimapZoom.enabled end,
+            set = function(enabled) ns.MinimapZoom.SetEnabled(enabled) end,
         },
     },
     {

@@ -16,7 +16,8 @@ These are the stubs:
 | Stub | Behavior |
 | --- | --- |
 | `CreateFrame(type, name, parent)` | Returns a fake frame (see below). A named frame also becomes a global, as in the client. |
-| `Minimap` | 140 × 140, center at (940, 680), effective scale 1. |
+| `Minimap` | A fake frame (see below), 140 × 140, center at (940, 680), effective scale 1. |
+| `Minimap_ZoomIn()`, `Minimap_ZoomOut()` | Add `1` or `-1` to `state.minimapZooms`. |
 | `UIParent` | A 1024 × 768 screen. The effective scale is `state.uiScale` (default 1). |
 | `GameTooltip`, `WorldMapFrame` | Fake widgets that record all calls. |
 | `GetCursorPosition()` | Returns `state.cursor.x` and `state.cursor.y`. |
