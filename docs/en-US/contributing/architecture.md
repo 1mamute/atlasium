@@ -250,6 +250,6 @@ The smaller the glue, the less you have to verify by hand in the game.
 ## Planned modules
 
 Map notes, TomTom integration, Questie integration and party sync (see the
-[project README](../../README.md)) each get their own file in `Atlasium/` and an entry in the
+[project README](../home.md)) each get their own file in `Atlasium/` and an entry in the
 `.toc`. Integrations with other add-ons are optional: check that the other add-on is loaded before
 you call it, so Atlasium still works without it.

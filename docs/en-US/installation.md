@@ -1,6 +1,6 @@
 # Installation
 
-> Atlasium has no release yet. For now, install it from the source code. Expect missing features.
+Download the player package from [GitHub Releases](https://github.com/1mamute/atlasium/releases/latest).
 
 ## Requirements
 
@@ -8,7 +8,8 @@
 
 ## Install
 
-1. Download or clone the Atlasium repository.
+1. Download the attached `Atlasium-v1.0.0.zip` (or a newer `Atlasium-v*.zip`) and extract it.
+   Use this ZIP instead of GitHub's automatic source archives.
 2. Copy the `Atlasium` folder (the one that contains `Atlasium.toc`) into
    `<WoW folder>\Interface\AddOns\`.
 3. Start the game. At the character screen, click **AddOns** and make sure Atlasium is enabled.
@@ -25,7 +26,7 @@ Log in and type:
 /atlasium version
 ```
 
-You should see a chat message such as `Atlasium: v0.1.0`.
+You should see a chat message such as `Atlasium: v1.0.0`.
 
 ## Update
 

@@ -10,6 +10,7 @@ Para conhecer os recursos para jogadores, leia o [README do projeto](../home.md)
 3. [Testes](testing.md): entenda as simulações do cliente e onde testar cada comportamento.
 4. [Testes no jogo](in-game-testing.md): verifique uma mudança no cliente real.
 5. [Convenções](conventions.md): regras de código para Lua no cliente 3.3.5a.
+6. [Versões](releases.md): números de versão, mensagens de commit, tags e pacotes de publicação.
 
 ## Antes de enviar uma mudança
 

@@ -1,7 +1,7 @@
 # Atlasium
 
 <p align="center">
-  <img src="docs/assets/atlasium-logo.png" alt="Atlasium — a parchment-map button with a red X beside a gold wordmark" width="720">
+  <img src="../assets/atlasium-logo.png" alt="Atlasium — a parchment-map button with a red X beside a gold wordmark" width="720">
 </p>
 
 A map add-on for World of Warcraft 3.3.5a (WotLK) that makes the world map feel like a modern web
@@ -21,7 +21,7 @@ map, and makes exploring with a group easier.
 - **Questie integration**: see Questie's quests and objectives on the Atlasium map.
 - **Party integration**: share waypoints, pings and notes with your group.
 
-See [Features](docs/en-US/features.md) for details and current status.
+See [Features](features.md) for details and current status.
 
 ## Documentation
 
@@ -31,19 +31,19 @@ Use the attached `Atlasium-v*.zip` file. GitHub's source archives include develo
 Versions follow [Semantic Versioning](https://semver.org/). New commits and pull request titles follow
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 See the [changelog](https://github.com/1mamute/atlasium/blob/main/CHANGELOG.md)
-and [release guide](docs/en-US/contributing/releases.md).
+and [release guide](contributing/releases.md).
 
 **For players**
 
-- [Installation](docs/en-US/installation.md): put Atlasium in your game.
-- [Usage](docs/en-US/usage.md): slash commands and how to use the map.
-- [Configuration](docs/en-US/configuration.md): settings and saved data.
-- [Party integration](docs/en-US/party.md): share waypoints, pings and notes with your group.
+- [Installation](installation.md): put Atlasium in your game.
+- [Usage](usage.md): slash commands and how to use the map.
+- [Configuration](configuration.md): settings and saved data.
+- [Party integration](party.md): share waypoints, pings and notes with your group.
 
 **For contributors**
 
-- [Contributing guide](docs/en-US/contributing/README.md): set up tools, understand the code, run tests.
-- [Documentation publishing](docs/en-US/contributing/documentation.md): build and publish this documentation.
+- [Contributing guide](contributing/README.md): set up tools, understand the code, run tests.
+- [Documentation publishing](contributing/documentation.md): build and publish this documentation.
 
 ## Thanks
 

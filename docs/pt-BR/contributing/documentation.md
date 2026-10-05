@@ -6,11 +6,11 @@ O controle de tema seleciona o modo claro ou escuro e mantém a escolha.
 
 ## Fontes
 
-- `README.md` é a página inicial em inglês. O título permanece na fonte.
+- `docs/en-US/home.md` é a página inicial em inglês. O título permanece na fonte.
   O site mostra o logo em vez de repetir o título visível.
 - `docs/pt-BR/home.md` é a página inicial em português.
-- Cada outro documento Markdown em `docs/` vira uma página.
-  Os documentos de contribuição ficam em `docs/contributing/`.
+- Cada outro documento Markdown em `docs/en-US/` vira uma página.
+  Os documentos de contribuição ficam em `docs/en-US/contributing/`.
 - Os documentos em português repetem esses caminhos em `docs/pt-BR/`.
   Toda página em inglês precisa de tradução. Mantenha os mesmos níveis e a mesma ordem de títulos.
 - `docs/site/` contém o modelo HTML, a folha de estilos e o script do navegador.
@@ -18,6 +18,8 @@ O controle de tema seleciona o modo claro ou escuro e mantém a escolha.
   executa o Doxygen e aplica o tema. Ele verifica links locais, imagens e âncoras de seções.
 
 Edite as fontes Markdown. Não edite `.build/site/`; a próxima geração substitui seu conteúdo.
+Mantenha o resumo em `README.md` sincronizado com as duas páginas iniciais.
+As pastas de idioma publicadas são `en-US/` e `pt-BR/`. Os arquivos de tema compartilhados ficam em `docs/site/`.
 Mantenha comandos, nomes de API e exemplos de código iguais nas traduções.
 As duas versões usam os IDs de seção em inglês para manter os links e as mudanças de idioma.
 

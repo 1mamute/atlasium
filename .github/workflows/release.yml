@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build release archive and notes
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python tools/package_release.py --tag "$RELEASE_TAG"
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          args=()
+          if [[ "$RELEASE_TAG" == *-* ]]; then args+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" \
+            ".build/release/Atlasium-$RELEASE_TAG.zip" \
+            ".build/release/Atlasium-$RELEASE_TAG.zip.sha256" \
+            --verify-tag --title "Atlasium $RELEASE_TAG" \
+            --notes-file .build/release/notes.md "${args[@]}"

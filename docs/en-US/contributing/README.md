@@ -1,7 +1,7 @@
 # Contributing
 
 This section is for developers. It explains how to build, test and change Atlasium. To learn what
-Atlasium does for players, read the [project README](../../README.md).
+Atlasium does for players, read the [project README](../home.md).
 
 ## Read in this order
 
@@ -10,6 +10,7 @@ Atlasium does for players, read the [project README](../../README.md).
 3. [Testing](testing.md): how the specs mock the WoW client, and what to test where.
 4. [In-game testing](in-game-testing.md): check a change in the real client.
 5. [Conventions](conventions.md): coding rules for 3.3.5a Lua.
+6. [Releases](releases.md): version numbers, commit messages, tags and release archives.
 
 ## Before you submit a change
 

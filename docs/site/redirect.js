@@ -1,5 +1,5 @@
 'use strict';
-let language = 'en';
+let language = 'en-US';
 try {
   if (localStorage.getItem('atlasium-language') === 'pt-BR') language = 'pt-BR';
 } catch (_) { /* English is the default when storage is unavailable. */ }

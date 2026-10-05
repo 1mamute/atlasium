@@ -4,12 +4,27 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, edited]
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check Conventional Commit pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: python tools/check_commit.py
+      - name: Test release packaging
+        run: python -m unittest discover -s tests -p 'test_*.py'
       - uses: leafo/gh-actions-lua@v10
         with:
           luaVersion: "5.1"

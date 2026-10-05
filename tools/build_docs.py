@@ -12,9 +12,9 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-LANGUAGES = ("en", "pt-BR")
+LANGUAGES = ("en-US", "pt-BR")
 LABELS = {
-    "en": {
+    "en-US": {
         "skip": "Skip to content", "languageLabel": "Documentation language", "darkMode": "Dark mode",
         "documentation": "Documentation", "onPage": "ON THIS PAGE", "start": "GET STARTED",
         "explore": "EXPLORE", "contribute": "CONTRIBUTE", "home": "Overview",
@@ -33,7 +33,7 @@ GROUPS = (
     ("contribute", ("docs/contributing/README.md", "docs/contributing/architecture.md",
                     "docs/contributing/testing.md", "docs/contributing/development.md",
                     "docs/contributing/in-game-testing.md", "docs/contributing/conventions.md",
-                    "docs/contributing/documentation.md")),
+                    "docs/contributing/documentation.md", "docs/contributing/releases.md")),
 )
 
 
@@ -68,24 +68,23 @@ def page_id(key):
 
 
 def load_pages():
-    sources = [ROOT / "README.md"] + sorted(
-        p for p in (ROOT / "docs").rglob("*.md")
-        if not {"design-draft", "site", "pt-BR"}.intersection(p.relative_to(ROOT / "docs").parts)
-    )
+    english = ROOT / "docs/en-US"
+    sources = sorted(english.rglob("*.md"))
     pages = {}
     for source in sources:
-        key = source.relative_to(ROOT).as_posix()
-        translated = ROOT / "docs/pt-BR" / ("home.md" if key == "README.md" else source.relative_to(ROOT / "docs"))
+        relative = source.relative_to(english)
+        key = "README.md" if relative.as_posix() == "home.md" else "docs/" + relative.as_posix()
+        translated = ROOT / "docs/pt-BR" / relative
         if not translated.is_file():
             raise ValueError(f"Missing Portuguese translation: {translated}")
-        pages[key] = {"en": source, "pt-BR": translated}
+        pages[key] = {"en-US": source, "pt-BR": translated}
     return pages
 
 
 def stage_markdown(key, language, pages, aliases):
     source = pages[key][language]
     text = source.read_text(encoding="utf-8")
-    english_headings = headings(pages[key]["en"].read_text(encoding="utf-8"))
+    english_headings = headings(pages[key]["en-US"].read_text(encoding="utf-8"))
     local_headings = headings(text)
     if [h[0] for h in english_headings] != [h[0] for h in local_headings]:
         raise ValueError(f"Heading structure differs between languages: {key}")
@@ -228,7 +227,7 @@ def build(doxygen):
                 (input_dir / filename(key).replace(".html", ".md")).write_text(staged, encoding="utf-8")
             config = (ROOT / "Doxyfile").read_text(encoding="utf-8")
             config += f'\nINPUT = "{input_dir.as_posix()}"\nOUTPUT_DIRECTORY = "{output_dir.as_posix()}"\n'
-            config += "OUTPUT_LANGUAGE = " + ("English" if language == "en" else "Brazilian") + "\n"
+            config += "OUTPUT_LANGUAGE = " + ("English" if language == "en-US" else "Brazilian") + "\n"
             config_path = work / language / "Doxyfile"
             config_path.write_text(config, encoding="utf-8")
             subprocess.run([doxygen, str(config_path)], check=True, cwd=ROOT)
@@ -253,7 +252,7 @@ def build(doxygen):
                         navigation += f'<a href="{filename(target)}"{active}>{escape(title)}</a>'
                 values = dict(LABELS[language], language=language, title=escape(titles[key]), filename=filename(key),
                               browserTitle='Atlasium' if key == 'README.md' else escape(titles[key]) + ' · Atlasium',
-                              englishSelected=' selected' if language == 'en' else '',
+                              englishSelected=' selected' if language == 'en-US' else '',
                               portugueseSelected=' selected' if language == 'pt-BR' else '',
                               navigation=navigation, sections=sections, content=content,
                               heading=f'<h1 class="{"sr-only" if key == "README.md" else "page-title"}">{escape(titles[key])}</h1>')
@@ -262,13 +261,24 @@ def build(doxygen):
                     rendered = rendered.replace("{{" + name + "}}", value)
                 (destination / filename(key)).write_text(rendered, encoding="utf-8")
     (site / "index.html").write_text(
-        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<!doctype html><html lang="en-US"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<script src="assets/redirect.js" defer></script><title>Atlasium</title></head>'
-        '<body><a href="en/index.html">English</a> · <a href="pt-BR/index.html">Português</a></body></html>',
+        '<body><a href="en-US/index.html">English</a> · <a href="pt-BR/index.html">Português</a></body></html>',
         encoding="utf-8",
     )
     (site / ".nojekyll").touch()
+    # Keep links to the previous English URLs working after the locale rename.
+    legacy = site / "en"
+    legacy.mkdir()
+    for key in pages:
+        target = "../en-US/" + filename(key)
+        (legacy / filename(key)).write_text(
+            '<!doctype html><html lang="en-US"><head><meta charset="utf-8">'
+            f'<script>location.replace("{target}" + location.hash);</script>'
+            f'<title>Atlasium</title></head><body><a href="{target}">Continue</a></body></html>',
+            encoding="utf-8",
+        )
     validate_site(site)
     print(f"Documentation ready: {site}")
 

@@ -6,11 +6,11 @@ current page and section. The theme control selects light or dark mode and remem
 
 ## Sources
 
-- `README.md` is the English home page. Its title stays in the source. The site shows the logo
+- `docs/en-US/home.md` is the English home page. Its title stays in the source. The site shows the logo
   instead of a second visible title.
 - `docs/pt-BR/home.md` is the Portuguese home page.
-- Each other Markdown document in `docs/` becomes one page. Contributor documents stay in
-  `docs/contributing/`.
+- Each other Markdown document in `docs/en-US/` becomes one page. Contributor documents stay in
+  `docs/en-US/contributing/`.
 - Portuguese documents mirror those paths in `docs/pt-BR/`. Every English page needs a translation.
   Keep the same heading levels and order in both languages.
 - `docs/site/` contains the HTML template, stylesheet and browser script.
@@ -18,6 +18,8 @@ current page and section. The theme control selects light or dark mode and remem
   and applies the theme. It checks local links, images and section anchors.
 
 Edit the Markdown sources. Do not edit `.build/site/`; the next build replaces it.
+Keep the root `README.md` overview in sync with both home pages.
+The published language folders are `en-US/` and `pt-BR/`. Shared theme files stay in `docs/site/`.
 Keep commands, API names and code examples unchanged in translations.
 The build gives both languages the English section IDs, so links and language changes keep working.
 
