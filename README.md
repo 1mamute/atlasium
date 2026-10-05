@@ -25,14 +25,6 @@ See [Features](docs/en-US/features.md) for details and current status.
 
 ## Documentation
 
-Download the installable ZIP from [GitHub Releases](https://github.com/1mamute/atlasium/releases/latest).
-Use the attached `Atlasium-v*.zip` file. GitHub's source archives include developer files.
-
-Versions follow [Semantic Versioning](https://semver.org/).
-New commits and pull request titles use `type: description`, without a scope.
-See the [changelog](https://github.com/1mamute/atlasium/blob/main/CHANGELOG.md)
-and [release guide](docs/en-US/contributing/releases.md).
-
 **For players**
 
 - [Installation](docs/en-US/installation.md): put Atlasium in your game.
