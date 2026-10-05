@@ -23,7 +23,7 @@ The build gives both languages the English section IDs, so links and language ch
 
 ## Local build
 
-1. Install Python 3.10 or later and Doxygen 1.9.8 or later. Add both executables to `PATH`.
+1. Install Python 3.10 or later and Doxygen 1.18.0 or later. Add both executables to `PATH`.
 2. From the repository root, run:
 
    ```
@@ -51,6 +51,7 @@ The build needs no Python packages. `.gitignore` excludes generated pages and lo
 
 The site URL is `https://1mamute.github.io/atlasium/`.
 The workflow builds both languages, checks links and uploads the site artifact.
+It uses the official Doxygen 1.18.0 Linux release and verifies its SHA-256 checksum.
 The deployment job publishes that artifact with the `github-pages` environment.
 If the environment requires approval, approve the deployment in Actions.
 

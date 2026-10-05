@@ -198,6 +198,11 @@ def validate_site(site):
 
 
 def build(doxygen):
+    version = subprocess.run([doxygen, "--version"], check=True, capture_output=True, text=True).stdout.strip()
+    numbers = re.match(r"(\d+)\.(\d+)\.(\d+)", version)
+    if not numbers or tuple(map(int, numbers.groups())) < (1, 18, 0):
+        raise ValueError(f"Doxygen 1.18.0 or later is required; found {version}")
+    print(f"Rendering with Doxygen {version}")
     pages = load_pages()
     aliases = {source.relative_to(ROOT).as_posix(): key for key, variants in pages.items() for source in variants.values()}
     site = (ROOT / ".build/site").resolve()

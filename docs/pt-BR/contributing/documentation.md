@@ -23,7 +23,7 @@ As duas versões usam os IDs de seção em inglês para manter os links e as mud
 
 ## Geração local
 
-1. Instale Python 3.10 ou posterior e Doxygen 1.9.8 ou posterior. Adicione os executáveis ao `PATH`.
+1. Instale Python 3.10 ou posterior e Doxygen 1.18.0 ou posterior. Adicione os executáveis ao `PATH`.
 2. Na raiz do repositório, execute:
 
    ```
@@ -51,6 +51,7 @@ A geração não precisa de pacotes Python. `.gitignore` exclui as páginas gera
 
 O endereço do site é `https://1mamute.github.io/atlasium/`.
 O workflow gera os dois idiomas, verifica os links e envia o artefato do site.
+Usa a versão Linux oficial do Doxygen 1.18.0 e verifica a soma SHA-256.
 A etapa de implantação publica esse artefato no ambiente `github-pages`.
 Se o ambiente exigir aprovação, aprove a implantação em Actions.
 

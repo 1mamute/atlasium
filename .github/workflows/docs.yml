@@ -34,7 +34,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install Doxygen
-        run: sudo apt-get update && sudo apt-get install -y doxygen
+        run: |
+          curl --fail --location --output "$RUNNER_TEMP/doxygen.tar.gz" \
+            https://github.com/doxygen/doxygen/releases/download/Release_1_18_0/doxygen-1.18.0.linux.bin.tar.gz
+          echo "14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90  $RUNNER_TEMP/doxygen.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/doxygen.tar.gz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/doxygen-1.18.0/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/doxygen-1.18.0/bin/doxygen" --version
       - name: Build and validate both languages
         run: python tools/build_docs.py
       - uses: actions/upload-pages-artifact@v3
