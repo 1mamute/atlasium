@@ -1,0 +1,9 @@
+Generated with the built-in imagegen tool from docs/assets/atlasium-logo.png.
+Output: docs/assets/atlasium-favicon.png (64x64 transparent PNG).
+The generated image was downscaled for browser tabs.
+
+Prompt:
+Extract the circular map emblem from the left side of the Atlasium logo.
+Remove the entire wordmark. Preserve the worn gold rim, parchment map,
+red X and silver pointer. Center the emblem on a transparent square,
+with a small equal margin. No text, added objects or background color.

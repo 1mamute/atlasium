@@ -263,6 +263,7 @@ def build(doxygen):
     (site / "index.html").write_text(
         '<!doctype html><html lang="en-US"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        '<link rel="icon" type="image/png" href="assets/atlasium-favicon.png">'
         '<script src="assets/redirect.js" defer></script><title>Atlasium</title></head>'
         '<body><a href="en-US/index.html">English</a> · <a href="pt-BR/index.html">Português</a></body></html>',
         encoding="utf-8",
@@ -275,6 +276,7 @@ def build(doxygen):
         target = "../en-US/" + filename(key)
         (legacy / filename(key)).write_text(
             '<!doctype html><html lang="en-US"><head><meta charset="utf-8">'
+            '<link rel="icon" type="image/png" href="../assets/atlasium-favicon.png">'
             f'<script>location.replace("{target}" + location.hash);</script>'
             f'<title>Atlasium</title></head><body><a href="{target}">Continue</a></body></html>',
             encoding="utf-8",
