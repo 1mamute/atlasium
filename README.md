@@ -10,10 +10,10 @@ map, and makes exploring with a group easier.
 ## Features
 
 - **Smooth map navigation**: drag and zoom the world map the way you do in Google Maps (available).
-  with a choice of English or Brazilian Portuguese (available).
 - **Minimap wheel zoom**: zoom the minimap with the mouse wheel (available).
 - **Minimap tiles**: draw unlit terrain at all six game zoom levels (available, experimental).
 - **Native settings UI**: configure features in a Blizzard-style window or Interface Options,
+  with a choice of English or Brazilian Portuguese (available).
 
 ## Planned Features
 - **Map notes**: pin your own notes on the map.
@@ -35,6 +35,7 @@ See [Features](docs/features.md) for details and current status.
 **For contributors**
 
 - [Contributing guide](docs/contributing/README.md): set up tools, understand the code, run tests.
+- [Documentation publishing](docs/contributing/documentation.md): build and publish this documentation.
 
 ## Thanks
 

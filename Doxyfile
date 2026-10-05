@@ -1,0 +1,16 @@
+# tools/build_docs.py supplies staged Markdown input and an isolated output directory.
+PROJECT_NAME           = Atlasium
+OUTPUT_LANGUAGE        = English
+INPUT_ENCODING         = UTF-8
+FILE_PATTERNS          = *.md
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = NO
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = NO
+DISABLE_INDEX          = YES
+SEARCHENGINE           = NO
+HAVE_DOT               = NO
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_AS_ERROR          = FAIL_ON_WARNINGS

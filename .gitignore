@@ -44,3 +44,7 @@ luac.out
 
 # Local settings (copy .env.example to .env)
 .env
+
+# Generated documentation and local build tools
+.build/
+__pycache__/
