@@ -39,9 +39,6 @@ luac.out
 *.x86_64
 *.hex
 
-# Claude
-.claude
-
 # Local settings (copy .env.example to .env)
 .env
 

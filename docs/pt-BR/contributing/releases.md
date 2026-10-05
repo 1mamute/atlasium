@@ -1,7 +1,7 @@
 # Versionamento e publicação
 
-O Atlasium segue [Semantic Versioning 2.0.0](https://semver.org/)
-e [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).
+O Atlasium segue [Semantic Versioning 2.0.0](https://semver.org/).
+Os assuntos de commit e títulos de pull requests usam o formato simples `type: description`.
 
 ## Números de versão
 
@@ -25,17 +25,20 @@ Recursos experimentais mantêm esse status nas versões estáveis.
 Use este formato para novos commits e títulos de pull requests:
 
 ```text
-type(optional-scope): short description
+type: description
 ```
 
 Use `feat` para novos recursos e `fix` para correções.
 Os outros tipos são `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore` e `revert`.
-Use `!` antes dos dois-pontos ou um rodapé `BREAKING CHANGE:` para mudanças incompatíveis.
+Não adicione um escopo, como `feat(map):`, ou `!` ao assunto.
+Use um rodapé `BREAKING CHANGE:` para mudanças incompatíveis.
 
 ```text
-feat(map): add map notes
-fix(minimap): restore terrain after loading
-feat(settings)!: replace a saved setting
+feat: add map notes
+fix: restore terrain after loading
+feat: replace a saved setting
+
+BREAKING CHANGE: explain the setting migration here
 ```
 
 `feat` normalmente exige uma versão MINOR. `fix` normalmente exige uma versão PATCH.
@@ -47,12 +50,12 @@ A integração contínua verifica os títulos das pull requests. O squash merge 
 O histórico existente permanece igual. Antes de um commit direto, verifique seu assunto:
 
 ```text
-python tools/check_commit.py "chore(release): prepare v1.0.0"
+python tools/check_commit.py "chore: prepare the next release"
 ```
 
 ## Publicar uma versão
 
-1. Integre as mudanças de publicação em `main` com um título no formato Conventional Commits.
+1. Integre as mudanças de publicação em `main` com um título no formato `type: description`.
 2. Antes da integração, atualize a versão no TOC e adicione uma seção correspondente em `CHANGELOG.md`.
 3. Execute `luacheck Atlasium tests`, `busted` e `python -m unittest discover -s tests -p 'test_*.py'`.
 4. Execute `python tools/package_release.py --tag v1.0.0` com a versão escolhida.

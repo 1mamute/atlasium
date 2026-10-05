@@ -4,17 +4,75 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**. The repo has a minimal scaffold: the add-on in `Atlasium/` (`Util.lua`, `Core.lua`, `Log.lua`, `MinimapButton.lua`, `Data/MinimapTileData.lua`, `MinimapTiles.lua`, `MinimapZoom.lua`, `Data/Overlays.lua`, `FogClear.lua`, `MapNavigation.lua`, `Dev.lua`, `DevConsole.lua`), busted specs in `tests/`, developer scripts in `tools/`, and developer docs in `docs/`. Available features: the minimap button, minimap wheel zoom, fog clearing and zoom and drag on the world map. Custom minimap tiles are available as an experimental feature; outdoor rendering is checked, and field checks remain open in `docs/en-US/contributing/in-game-testing.md`.
+Atlasium is a map add-on for **World of Warcraft 3.3.5a (WotLK, interface 30300)**.
+The first stable release is [v1.0.0](https://github.com/1mamute/atlasium/releases/tag/v1.0.0).
+The add-on lives in `Atlasium/`, specs in `tests/`, and developer scripts in `tools/`.
+Available features include the minimap button, minimap wheel zoom, fog clearing, world map drag and zoom,
+and native settings with English and Brazilian Portuguese text.
+Custom minimap tiles are experimental. Outdoor rendering is checked; field checks remain open in
+`docs/en-US/contributing/in-game-testing.md`.
 
 ## Commands
 
-Requires Lua 5.1, busted and luacheck (see `docs/en-US/contributing/development.md`). From the repo root:
+Requires Lua 5.1, busted, luacheck and Python 3.10 or later
+(see `docs/en-US/contributing/development.md`). From the repo root:
 
 - `luacheck Atlasium tests` lints
 - `busted` runs the specs (config in `.busted`)
 - `busted tests/core_spec.lua` runs one spec file; `busted --filter="text"` runs matching tests
+- `python -m unittest discover -s tests -p 'test_*.py'` checks release packaging and commit subjects
+- `python tools/check_commit.py "docs: update contributor guidance"` checks a commit subject
+- `python tools/package_release.py --tag v1.0.0` builds the player ZIP and checksum in `.build/release/`
+- `python tools/build_docs.py` builds and validates the bilingual site; requires Doxygen 1.18.0 or later
 
-CI (`.github/workflows/ci.yml`) runs both.
+CI (`.github/workflows/ci.yml`) runs Lua lint, Lua specs and Python tests.
+It checks pull request titles on pull request events. Documentation and release workflows run separately.
+
+## Project skills and Claude settings
+
+`.claude/` is tracked. It contains the Lua LSP plugin setting, the permission for `tools/wow-dev.ps1`,
+the `repo-worker` agent definition, and these project skills:
+
+- `wow-api-335`: verify 3.3.5a APIs, events, widget methods and Blizzard UI code.
+- `carbonite-ref`, `mapster-ref`, `questie-ref` and `tomtom-ref`: inspect reference add-ons before designing equivalents.
+- `ingame-check`: verify changes in the running client with the dev console and screenshots.
+
+Reference source caches live outside the repository under `~/.cache/`. They are read-only and may need setup.
+Follow each skill's lookup instructions. Do not assume another contributor has those caches installed.
+`CLAUDE.local.md` remains a private companion, excluded through `.git/info/exclude`.
+Keep machine-specific preferences there and shared project guidance here.
+
+## Commits, versions and releases
+
+- Use `type: description` for new commit subjects and pull request titles. Do not add a scope or `!` to the subject.
+- Types are `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore` and `revert`.
+- Describe incompatible changes with a `BREAKING CHANGE:` footer and migration steps in `CHANGELOG.md`.
+- Squash merges use the PR title as the commit subject. Existing history stays unchanged.
+- Use SemVer: PATCH for compatible fixes, MINOR for compatible features, MAJOR for incompatible changes.
+- The compatibility contract covers documented commands, settings, saved data and supported clients. Internal `ns` functions are not public API.
+- `Atlasium/Atlasium.toc` is the version source. Git tags are annotated and use `vMAJOR.MINOR.PATCH`.
+- Add a matching section in `CHANGELOG.md` before tagging. The tag must match the TOC version.
+- `.github/workflows/release.yml` runs CI for `v*` tag pushes, then publishes the ZIP, SHA-256 checksum and changelog notes.
+- Prerelease suffixes produce GitHub prereleases. Never move a published tag or replace a published archive.
+- The ZIP includes the TOC and its listed files, README, changelog, license, and player Markdown docs in `docs/en-US/` and `docs/pt-BR/`.
+- Exclude every `contributing` directory, tests, tooling, agent settings, website files, images and local configuration.
+- Keep `Dev.lua` and `DevConsole.lua` in the ZIP: the TOC loads them, and they activate only in debug mode.
+- `tools/package_release.py` redirects links to excluded docs and images to tagged files on GitHub.
+- Players install the attached `Atlasium-v*.zip`, not GitHub's automatic source archives.
+
+See `docs/en-US/contributing/releases.md` for the complete release procedure.
+
+## Documentation layout and publishing
+
+- English docs live in `docs/en-US/`; Brazilian Portuguese docs mirror them in `docs/pt-BR/`.
+- Each language has a `home.md` and a `contributing/` directory. Keep the root README overview in sync with both home pages.
+- Keep heading levels and order the same across translations. The site uses English section IDs in both languages.
+- `docs/site/` is required source: it holds the HTML template, stylesheet and browser scripts. Keep it in the repo.
+- `docs/assets/` holds shared documentation images. `.build/site/` is generated and ignored.
+- `tools/build_docs.py` uses `Doxyfile` and Doxygen to render both languages and validate links, images and anchors.
+- Published language paths are `/en-US/` and `/pt-BR/`; generated `/en/` redirects preserve older links.
+- `.github/workflows/docs.yml` builds and deploys GitHub Pages at `https://1mamute.github.io/atlasium/`.
+- Update installation and configuration docs when player behavior changes. Keep available, experimental and planned status honest.
 
 ## Architecture
 
@@ -40,7 +98,7 @@ CI (`.github/workflows/ci.yml`) runs both.
   edits and calls feature setters. `SettingsUI.lua` builds the shared controls in a standalone
   native dialog and an Interface Options panel. Changes apply immediately in both views.
 
-- Every file starts with `local ADDON_NAME, ns = ...` and attaches to `ns`; no new globals beyond `AtlasiumDB`, the slash command, frame names that start with `Atlasium` (only when the client or other add-ons need the name, for example `UISpecialFrames`) and the debug handle `AtlasiumDev` (debug mode only, set by `Dev.lua`).
+- Every add-on Lua file starts with `local ADDON_NAME, ns = ...` (or `local _, ns = ...`) and attaches to `ns`; no new globals beyond `AtlasiumDB`, the slash command, frame names that start with `Atlasium` (only when the client or other add-ons need the name, for example `UISpecialFrames`) and the debug handle `AtlasiumDev` (debug mode only, set by `Dev.lua`).
 - New files go in `Atlasium/Atlasium.toc` in dependency order, with a matching `tests/*_spec.lua`.
 - Keep logic pure (like `Util.lua`) and WoW-API glue thin so it can be tested with the stubs in `tests/helper.lua`.
 - Add any new WoW API function to `read_globals` in `.luacheckrc`.

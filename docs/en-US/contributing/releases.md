@@ -1,7 +1,7 @@
 # Versioning and releases
 
-Atlasium follows [Semantic Versioning 2.0.0](https://semver.org/)
-and [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).
+Atlasium follows [Semantic Versioning 2.0.0](https://semver.org/).
+Commit subjects and pull request titles use the simple format `type: description`.
 
 ## Version numbers
 
@@ -25,17 +25,20 @@ Experimental features keep their experimental status in stable releases.
 Use this format for new commits and pull request titles:
 
 ```text
-type(optional-scope): short description
+type: description
 ```
 
 Use `feat` for new features and `fix` for bug fixes.
 Other types are `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore` and `revert`.
-Use `!` before the colon or a `BREAKING CHANGE:` footer for incompatible changes.
+Do not add a scope, such as `feat(map):`, or `!` to the subject.
+Use a `BREAKING CHANGE:` footer for incompatible changes.
 
 ```text
-feat(map): add map notes
-fix(minimap): restore terrain after loading
-feat(settings)!: replace a saved setting
+feat: add map notes
+fix: restore terrain after loading
+feat: replace a saved setting
+
+BREAKING CHANGE: explain the setting migration here
 ```
 
 `feat` normally requires a MINOR release. `fix` normally requires a PATCH release.
@@ -47,12 +50,12 @@ CI checks pull request titles. Squash merges use the pull request title as the c
 Existing history stays unchanged. Before a direct commit, check its subject:
 
 ```text
-python tools/check_commit.py "chore(release): prepare v1.0.0"
+python tools/check_commit.py "chore: prepare the next release"
 ```
 
 ## Publish a release
 
-1. Merge the release changes into `main` with a Conventional Commit title.
+1. Merge the release changes into `main` with a `type: description` title.
 2. Update the TOC version and add a matching section in `CHANGELOG.md` before the merge.
 3. Run `luacheck Atlasium tests`, `busted` and `python -m unittest discover -s tests -p 'test_*.py'`.
 4. Run `python tools/package_release.py --tag v1.0.0` with the selected version.

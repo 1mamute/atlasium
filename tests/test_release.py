@@ -98,11 +98,12 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release.release_notes(self.root, "v2.0.0")
 
-    def test_conventional_commit_subjects(self):
-        for subject in ("feat(map): add notes", "fix: restore terrain", "feat(settings)!: migrate data"):
-            self.assertTrue(commit.is_conventional(subject))
-        for subject in ("Update map", "feat: ", "feat: add notes\nextra", "unknown: add notes"):
-            self.assertFalse(commit.is_conventional(subject))
+    def test_simple_commit_subjects(self):
+        for subject in ("feat: add notes", "fix: restore terrain", "docs: update guidance"):
+            self.assertTrue(commit.is_valid_subject(subject))
+        for subject in ("Update map", "feat: ", "feat: add notes\nextra", "unknown: add notes",
+                        "feat(map): add notes", "feat!: migrate data", "feat: add notes\rextra"):
+            self.assertFalse(commit.is_valid_subject(subject))
 
 
 if __name__ == "__main__":

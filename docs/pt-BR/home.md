@@ -29,8 +29,8 @@ Veja [Recursos](features.md) para detalhes e o status atual.
 Baixe o ZIP de instalação em [GitHub Releases](https://github.com/1mamute/atlasium/releases/latest).
 Use o arquivo anexado `Atlasium-v*.zip`. Os arquivos de código-fonte do GitHub incluem arquivos de desenvolvimento.
 
-As versões seguem [Semantic Versioning](https://semver.org/). Novos commits e títulos de pull requests seguem
-[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+As versões seguem [Semantic Versioning](https://semver.org/).
+Novos commits e títulos de pull requests usam `type: description`, sem escopo.
 Veja o [histórico de mudanças](https://github.com/1mamute/atlasium/blob/main/CHANGELOG.md)
 e o [guia de versões](contributing/releases.md).
 
